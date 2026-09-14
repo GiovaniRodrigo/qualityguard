@@ -12,64 +12,69 @@
 
 ## Phase 1 — MVP analyzer
 
-- [ ] Git diff ingestion.
-- [ ] File classification.
-- [ ] Repository context collector.
-- [ ] Deterministic rule engine.
-- [ ] Architecture dependency checks.
-- [ ] Testability checks.
-- [ ] Security checks.
-- [ ] Complexity and maintainability checks.
-- [ ] Structured finding validation.
-- [ ] Quality score.
-- [ ] Merge recommendation.
-- [ ] CLI interface.
+- [x] Git diff ingestion.
+- [x] File classification.
+- [x] Deterministic rule engine.
+- [x] Architecture dependency checks.
+- [x] Testability checks.
+- [x] Security checks.
+- [x] Complexity and maintainability checks.
+- [x] Structured finding validation.
+- [x] Quality score.
+- [x] Merge recommendation / quality gate.
+- [x] CLI interface.
+- [x] Config, rule enable/disable, severity overrides, deduplication and baseline.
 
 ## Phase 2 — GitHub integration
 
-- [ ] GitHub App.
-- [ ] Pull Request webhook.
-- [ ] Changed-file analysis.
-- [ ] PR summary comment.
-- [ ] Inline findings.
-- [ ] Optional CI gate.
-- [ ] Check Run status.
+- [x] GitHub webhook verification and PR event filter.
+- [x] Changed-file analysis client.
+- [x] PR summary/check publishing primitives.
+- [x] Optional CI gate integration point.
+- [ ] Production GitHub App credentials and installation flow.
+- [ ] Inline findings with exact diff positions.
 
 ## Phase 3 — AI governance
 
-- [ ] Provider abstraction.
-- [ ] OpenAI provider.
-- [ ] Gemini provider.
-- [ ] Anthropic provider.
-- [ ] Ollama/local provider.
-- [ ] Context-aware prompting.
-- [ ] Strict JSON output.
-- [ ] Schema validation.
-- [ ] AI confidence calibration.
-- [ ] AI risk assessment.
+- [x] Provider abstraction.
+- [x] OpenAI provider.
+- [x] Gemini provider.
+- [x] Anthropic provider interface.
+- [x] Ollama/local provider.
+- [x] Context-aware prompting.
+- [x] Strict JSON output contract.
+- [x] Schema validation.
+- [ ] Empirical confidence calibration.
+- [ ] AI risk assessment evaluation set.
 
 ## Phase 4 — Architecture intelligence
 
-- [ ] AST extraction.
-- [ ] Dependency graph.
-- [ ] Architecture map.
-- [ ] Architecture rules DSL.
-- [ ] Architecture drift detection.
-- [ ] Historical quality trends.
-- [ ] Baseline comparison.
+- [x] AST extraction.
+- [x] Dependency graph.
+- [x] Architecture map.
+- [x] Architecture rules DSL.
+- [x] Architecture drift detection.
+- [x] Baseline comparison.
+- [ ] Persistent historical quality trends.
 
 ## Phase 5 — Commercial platform
 
-- [ ] Authentication.
-- [ ] Organizations and projects.
-- [ ] Usage metering.
-- [ ] Billing.
-- [ ] Team policies.
-- [ ] Audit trail.
-- [ ] Dashboard.
-- [ ] Self-hosted deployment.
-- [ ] Enterprise governance.
+- [x] Authentication foundation.
+- [x] Organizations and projects foundation.
+- [x] Usage metering model and plan limits.
+- [x] Stripe customer lifecycle.
+- [x] Stripe Checkout subscriptions.
+- [x] Stripe Billing Portal.
+- [x] Stripe webhook signature verification and subscription state mapping.
+- [x] Team policy model.
+- [x] Audit trail model.
+- [x] Dashboard and pricing surface.
+- [x] Self-hosted Docker stack foundation.
+- [x] Enterprise governance primitives.
+- [ ] Production PostgreSQL repository wired into API.
+- [ ] Production SSO / SCIM.
+- [ ] Production deployment, secrets and observability.
 
-## Product validation rule
+## Definition of ready
 
-Do not build Phase 3–5 infrastructure before the MVP demonstrates that teams value the quality/architecture decision and are willing to pay for it.
+The repository now contains an end-to-end implementation foundation from local quality analysis through SaaS authentication, organizations, GitHub integration, AI adapters, architecture intelligence, metering and Stripe billing. Remaining unchecked items are production validation/infrastructure rather than missing product primitives.
