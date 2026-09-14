@@ -7,11 +7,35 @@ on:
 
 concurrency:
   group: qualityguard-production
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
+  quality:
+    name: CI Verification Gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.15.0
+          run_install: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Typecheck
+        run: pnpm typecheck
+      - name: Test
+        run: pnpm test
+      - name: Build
+        run: pnpm build
+
   deploy:
-    if: ${{ vars.PRODUCTION_DEPLOY_ENABLED == 'true' }}
+    name: Deploy to Production VPS
+    needs: [quality]
+    if: ${{ vars.PRODUCTION_DEPLOY_ENABLED == 'true' || github.event_name == 'workflow_dispatch' }}
     runs-on: ubuntu-latest
     environment: production
     steps:
@@ -29,22 +53,79 @@ jobs:
           chmod 600 ~/.ssh/qualityguard
           ssh-keyscan -H "$SSH_HOST" >> ~/.ssh/known_hosts
 
-      - name: Deploy over SSH
+      - name: Deploy and Validate over SSH
         env:
           SSH_HOST: ${{ secrets.PRODUCTION_HOST }}
           SSH_USER: ${{ secrets.PRODUCTION_USER }}
+          TARGET_SHA: ${{ github.sha }}
         run: |
           test -n "$SSH_USER"
-          ssh -i ~/.ssh/qualityguard "$SSH_USER@$SSH_HOST" <<'REMOTE'
+          ssh -i ~/.ssh/qualityguard "$SSH_USER@$SSH_HOST" "TARGET_SHA='$TARGET_SHA' bash -s" <<'REMOTE'
           set -euo pipefail
           cd /opt/qualityguard
+
+          test -f .env.production || { echo "ERROR: .env.production not found in /opt/qualityguard"; exit 1; }
+
+          PREVIOUS_COMMIT=$(git rev-parse HEAD 2>/dev/null || echo "")
+          DEPLOY_START=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          echo "=========================================="
+          echo "  QualityGuard Production Deployment      "
+          echo "  Start:           $DEPLOY_START"
+          echo "  Target Commit:   ${TARGET_SHA}"
+          echo "  Previous Commit: ${PREVIOUS_COMMIT}"
+          echo "=========================================="
+
+          rollback() {
+            echo "!!! DEPLOYMENT FAILED. Rolling back to previous commit ($PREVIOUS_COMMIT) !!!"
+            if [ -n "$PREVIOUS_COMMIT" ]; then
+              git reset --hard "$PREVIOUS_COMMIT"
+              docker compose --env-file .env.production -f docker-compose.production.yml up -d --remove-orphans
+              echo "Rollback to $PREVIOUS_COMMIT completed."
+            fi
+            exit 1
+          }
+
+          trap rollback ERR
+
           git fetch origin main
           git checkout main
-          git reset --hard origin/main
-          test -f .env.production
+          git reset --hard "${TARGET_SHA}"
+
+          export GIT_COMMIT="${TARGET_SHA}"
+          echo "Building production containers..."
           docker compose --env-file .env.production -f docker-compose.production.yml build --pull
+
+          echo "Starting production services..."
           docker compose --env-file .env.production -f docker-compose.production.yml up -d --remove-orphans
+
+          echo "Waiting for services to become healthy..."
+          MAX_RETRIES=30
+          RETRY=0
+          until [ $RETRY -ge $MAX_RETRIES ]; do
+            API_READY=$(docker compose --env-file .env.production -f docker-compose.production.yml exec -T api node -e "fetch('http://127.0.0.1:8787/ready').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))" 2>/dev/null && echo "ok" || echo "waiting")
+            if [ "$API_READY" = "ok" ]; then
+              echo "API is ready and connected to PostgreSQL."
+              break
+            fi
+            RETRY=$((RETRY+1))
+            sleep 3
+          done
+
+          if [ $RETRY -ge $MAX_RETRIES ]; then
+            echo "Timeout waiting for API healthcheck."
+            rollback
+          fi
+
+          echo "Running smoke tests..."
+          bash deploy/smoke-test.sh
+
           docker image prune -f
-          docker compose --env-file .env.production -f docker-compose.production.yml ps
-          curl --fail --silent --show-error https://qualityguard.gfcode.com.br/api/health
+          trap - ERR
+
+          DEPLOY_END=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          echo "=========================================="
+          echo "  Deployment SUCCESS                      "
+          echo "  Commit: $TARGET_SHA"
+          echo "  End:    $DEPLOY_END"
+          echo "=========================================="
           REMOTE
