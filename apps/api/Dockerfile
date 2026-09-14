@@ -3,6 +3,7 @@ WORKDIR /app
 RUN corepack enable
 COPY package.json pnpm-workspace.yaml ./
 COPY apps/api/package.json apps/api/package.json
+COPY integrations/github/package.json integrations/github/package.json
 COPY packages/domain/package.json packages/domain/package.json
 COPY packages/analyzer/package.json packages/analyzer/package.json
 RUN pnpm install --no-frozen-lockfile
