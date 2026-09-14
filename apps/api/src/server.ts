@@ -3,6 +3,8 @@ import { randomUUID } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { analyzeDiff } from '@qualityguard/analyzer';
+import { createGitHubClient, createInstallationToken, shouldReviewPullRequest, verifyGitHubWebhook, type PullRequestEvent } from '@qualityguard/github';
 import { hashPassword, signToken, verifyPassword, verifyToken } from './auth.js';
 import { healthDatabase, pool, PostgresStore, recordStripeEvent } from './db.js';
 import { createCheckoutSession, createCustomer, createPortalSession, mapSubscriptionEvent, verifyStripeSignature, type Plan, type StripeSubscriptionEvent } from './billing.js';
@@ -33,8 +35,28 @@ async function migrate(): Promise<void> {
   await pool.query(await readFile(migrationPath, 'utf8'));
 }
 
-function subscriptionPlan(event: ReturnType<typeof mapSubscriptionEvent>): Plan | undefined {
-  return event?.plan;
+async function processPullRequest(event: PullRequestEvent): Promise<void> {
+  if (!shouldReviewPullRequest(event) || !event.installation?.id || !event.repository || !event.pull_request) return;
+  const appId = process.env.GITHUB_APP_ID;
+  const privateKey = process.env.GITHUB_APP_PRIVATE_KEY?.replace(/\\n/g, '\n');
+  if (!appId || !privateKey) throw new Error('GitHub App credentials are not configured');
+
+  const token = await createInstallationToken(appId, privateKey, event.installation.id);
+  const client = createGitHubClient(token);
+  const [owner, repo] = event.repository.full_name.split('/');
+  if (!owner || !repo) throw new Error(`Invalid GitHub repository: ${event.repository.full_name}`);
+  const diff = await client.getPullRequestDiff(owner, repo, event.pull_request.number);
+  const result = analyzeDiff(diff);
+  const conclusion = result.decision === 'block' ? 'failure' : result.decision === 'review_required' ? 'neutral' : 'success';
+  const summary = [
+    `Score: ${result.score}/100`,
+    `Decision: ${result.decision}`,
+    `Changed files: ${result.changedFiles}`,
+    `Additions: ${result.additions}`,
+    `Deletions: ${result.deletions}`,
+    `Findings: ${result.findings.length}`,
+  ].join('\n');
+  await client.createCheck(owner, repo, event.pull_request.head.sha, conclusion, 'QualityGuard review', summary);
 }
 
 async function handler(req: IncomingMessage, res: ServerResponse): Promise<void> {
@@ -49,29 +71,32 @@ async function handler(req: IncomingMessage, res: ServerResponse): Promise<void>
     return json(res, database ? 200 : 503, { ready: database });
   }
 
+  if (req.method === 'POST' && url.pathname === '/webhooks/github') {
+    const payload = await body(req);
+    const secret = process.env.GITHUB_WEBHOOK_SECRET;
+    if (!secret || !verifyGitHubWebhook(payload, req.headers['x-hub-signature-256'], secret)) return json(res, 401, { error: 'invalid GitHub signature' });
+    let event: PullRequestEvent;
+    try { event = JSON.parse(payload) as PullRequestEvent; } catch { return json(res, 400, { error: 'invalid JSON payload' }); }
+    res.writeHead(202, { 'content-type': 'application/json; charset=utf-8' });
+    res.end(JSON.stringify({ accepted: true }));
+    void processPullRequest(event).catch((error: unknown) => console.error('GitHub PR review failed', error));
+    return;
+  }
+
   if (req.method === 'POST' && url.pathname === '/webhooks/stripe') {
     const payload = await body(req);
     const signature = req.headers['stripe-signature'];
     const secret = process.env.STRIPE_WEBHOOK_SECRET;
-    if (!secret || typeof signature !== 'string' || !verifyStripeSignature(payload, signature, secret)) {
-      return json(res, 400, { error: 'invalid Stripe signature' });
-    }
-
+    if (!secret || typeof signature !== 'string' || !verifyStripeSignature(payload, signature, secret)) return json(res, 400, { error: 'invalid Stripe signature' });
     let parsed: StripeSubscriptionEvent;
-    try {
-      parsed = JSON.parse(payload) as StripeSubscriptionEvent;
-    } catch {
-      return json(res, 400, { error: 'invalid JSON payload' });
-    }
+    try { parsed = JSON.parse(payload) as StripeSubscriptionEvent; } catch { return json(res, 400, { error: 'invalid JSON payload' }); }
     if (!parsed.id || !parsed.type || !parsed.data?.object) return json(res, 400, { error: 'invalid Stripe event' });
-
     const fresh = await recordStripeEvent(parsed.id, parsed.type);
     if (!fresh) return json(res, 200, { received: true, duplicate: true });
-
     const event = mapSubscriptionEvent(parsed);
     if (event) {
       const org = await store.findOrganizationByStripeCustomer(event.customerId);
-      if (org) await store.updateSubscription(org.id, { subscriptionId: event.subscriptionId, status: event.status, plan: subscriptionPlan(event) });
+      if (org) await store.updateSubscription(org.id, { subscriptionId: event.subscriptionId, status: event.status, plan: event.plan });
     }
     return json(res, 200, { received: true });
   }
