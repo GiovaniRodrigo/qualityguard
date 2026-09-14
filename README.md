@@ -2,74 +2,87 @@
 
 > AI-powered software quality and architecture governance for teams shipping code with AI.
 
-QualityGuard is being built around a simple engineering question:
-
 **Can this change safely enter the current architecture?**
 
-It combines deterministic software analysis with contextual AI review to evaluate pull requests against architecture, security, testing, maintainability, dependency, performance, and scalability rules.
+QualityGuard combines deterministic analysis, architecture intelligence and optional AI review into an executable quality-control layer for software teams.
 
-## Product direction
-
-QualityGuard is not intended to be another generic AI code reviewer. The product focuses on **software quality governance**: understanding the repository as a system, enforcing explicit engineering rules, detecting architecture drift, and producing structured findings that teams can act on.
-
-### Initial workflow
+## Implemented product path
 
 ```text
-GitHub Pull Request
-        |
-        v
-   QualityGuard
-        |
-  +-----+------+
-  |            |
-Static       AI analysis
-analysis        |
-  |            |
-  +-----+------+
-        |
-        v
- Quality Engine
-        |
-  +-----+----------------------+
-  |        |       |           |
-  v        v       v           v
-Arch.   Security Testing  Maintainability
-  |        |       |           |
-  +--------+-------+-----------+
-           |
-           v
-    Structured Findings
-           |
-           v
-     Quality Decision
-           |
-           v
-      PR feedback
+CLI / GitHub PR
+      ↓
+Diff + repository context
+      ↓
+Deterministic rules ──→ baseline + deduplication
+      ↓
+AST + dependency graph ──→ architecture drift
+      ↓
+Optional AI providers ──→ strict schema validation
+      ↓
+Findings → score → Quality Gate
+      ↓
+GitHub Check / dashboard
+      ↓
+Organization → usage metering → Stripe subscription
 ```
 
-## MVP
+## Capabilities
 
-1. Analyze a Git diff.
-2. Parse changed files and repository context.
-3. Evaluate deterministic quality and architecture rules.
-4. Run optional LLM analysis using a strict JSON contract.
-5. Validate findings against the domain schema.
-6. Produce a quality score and merge recommendation.
-7. Publish concise feedback to a GitHub Pull Request.
+### Developer / engine
+- Git diff and staged analysis
+- YAML policy configuration
+- Enable/disable rules and severity overrides
+- Stable finding fingerprints and baseline suppression
+- Quality Gate with minimum score and blocking severities
+- Strict Zod finding validation
+- Architecture dependency graph and cycle detection
+- TypeScript AST extraction
+- Architecture policy DSL and drift detection
 
-## Design principles
+### AI governance
+- Provider abstraction
+- OpenAI, Gemini, Anthropic and Ollama adapters
+- Context-aware review prompt
+- JSON-only finding contract
+- Schema validation before findings reach the product domain
 
-- Deterministic checks before probabilistic checks.
-- Structured findings, never raw model output.
-- Repository context over isolated snippets.
-- Explainable decisions with file/line evidence.
-- Provider-agnostic LLM integration.
-- Local-first capability as a strategic product requirement.
-- Security and privacy by design.
-- Small MVP, fast customer validation, incremental expansion.
+### GitHub
+- Signed webhook verification
+- PR event filtering
+- Diff retrieval
+- Check Run publishing
+- PR summary comment client
 
-## Status
+### Commercial platform
+- Authentication foundation
+- Organizations and projects
+- PostgreSQL schema
+- Usage metering and plan limits
+- Team policies
+- Audit trail
+- Dashboard/pricing surface
+- Stripe customer creation
+- Stripe Checkout subscriptions
+- Stripe Billing Portal
+- Signed Stripe subscription webhooks
+- Self-hosted PostgreSQL/Redis/API Docker stack
 
-🚧 Early product development.
+## CLI
 
-See [ROADMAP.md](ROADMAP.md), [docs/product/PRODUCT.md](docs/product/PRODUCT.md), and [docs/architecture/ARCHITECTURE.md](docs/architecture/ARCHITECTURE.md).
+```bash
+qualityguard analyze .
+qualityguard analyze . --diff
+qualityguard analyze . --staged
+qualityguard check . --diff
+qualityguard baseline .
+```
+
+## Billing
+
+See `docs/commercial/BILLING.md` for Stripe configuration, webhook setup and production security requirements.
+
+## Production status
+
+The product primitives through **Billing (#35)** are implemented. Production launch still requires external configuration and validation: GitHub App credentials/installation, live Stripe Prices/webhook endpoint, PostgreSQL repository wiring, SSO/SCIM, secrets, HTTPS, rate limiting, observability and end-to-end acceptance tests.
+
+See `ROADMAP.md` for the remaining production gates.
