@@ -19,16 +19,25 @@ Antes de subir a stack, confirme que `qualityguard.gfcode.com.br` resolve para o
 
 ## 2. Preparar o VPS
 
-Como `root`:
+Como o repositório é privado no GitHub, o `raw.githubusercontent.com` direto sem token retorna 404. Escolha uma das opções abaixo:
 
+### Opção A (Recomendada): Executar a partir da sua máquina local via SSH
 ```bash
-cd /opt
-mkdir -p qualityguard
-cd qualityguard
-curl -fsSL https://raw.githubusercontent.com/GiovaniRodrigo/qualityguard/main/deploy/bootstrap-vps.sh | bash
+ssh root@2.25.92.154 'bash -s' < deploy/bootstrap-vps.sh
 ```
 
-Depois, configure o acesso SSH do usuário de deploy e clone o repositório em `/opt/qualityguard`.
+### Opção B: Baixar no VPS usando Token do GitHub (PAT)
+```bash
+curl -fsSL -H "Authorization: token SEU_GITHUB_TOKEN" \
+  -H "Accept: application/vnd.github.v3.raw" \
+  https://api.github.com/repos/GiovaniRodrigo/qualityguard/contents/deploy/bootstrap-vps.sh | bash
+```
+
+### Opção C: Criar o script diretamente no VPS
+Crie o arquivo `/tmp/bootstrap-vps.sh` no VPS, cole o conteúdo de `deploy/bootstrap-vps.sh` e execute:
+```bash
+chmod +x /tmp/bootstrap-vps.sh && /tmp/bootstrap-vps.sh
+```
 
 O firewall deve expor somente SSH, HTTP e HTTPS. PostgreSQL e Redis ficam exclusivamente na rede Docker privada.
 
