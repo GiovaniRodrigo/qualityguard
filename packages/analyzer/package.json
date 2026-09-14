@@ -1,7 +1,7 @@
 {
   "name": "@qualityguard/analyzer",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
   "scripts": {
     "build": "tsc -p tsconfig.json",
@@ -10,7 +10,9 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@qualityguard/domain": "workspace:*"
+    "@qualityguard/domain": "workspace:*",
+    "yaml": "^2.8.1",
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "typescript": "^5.9.2",
