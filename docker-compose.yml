@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: qualityguard
+      POSTGRES_USER: qualityguard
+      POSTGRES_PASSWORD: qualityguard
+    ports: ["5432:5432"]
+    volumes: [qualityguard_pg:/var/lib/postgresql/data]
+  redis:
+    image: redis:7-alpine
+    ports: ["6379:6379"]
+  api:
+    build: ./apps/api
+    environment:
+      DATABASE_URL: postgres://qualityguard:qualityguard@postgres:5432/qualityguard
+      PORT: 8787
+    ports: ["8787:8787"]
+    depends_on: [postgres, redis]
+volumes:
+  qualityguard_pg:
