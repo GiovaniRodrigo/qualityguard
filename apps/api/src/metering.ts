@@ -1,0 +1,4 @@
+export interface UsageEvent { organizationId:string; eventType:'review'|'ai_tokens'|'repository_scan'; quantity:number; metadata?:Record<string,string|number>; createdAt:string; }
+export interface UsageLimit { reviewsPerMonth:number; aiTokensPerMonth:number; }
+export const planLimits:Record<'community'|'pro'|'team'|'enterprise',UsageLimit>={community:{reviewsPerMonth:50,aiTokensPerMonth:0},pro:{reviewsPerMonth:1000,aiTokensPerMonth:2_000_000},team:{reviewsPerMonth:5000,aiTokensPerMonth:10_000_000},enterprise:{reviewsPerMonth:Infinity,aiTokensPerMonth:Infinity}};
+export function withinLimit(plan:keyof typeof planLimits,eventType:UsageEvent['eventType'],used:number,quantity:number){const limit=eventType==='ai_tokens'?planLimits[plan].aiTokensPerMonth:planLimits[plan].reviewsPerMonth;return used+quantity<=limit;}
