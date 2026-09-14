@@ -2,6 +2,8 @@
 import { readFile, readdir } from 'node:fs/promises';
 import { join, relative, extname } from 'node:path';
 import { analyze } from '@qualityguard/analyzer';
+import { changedSourceFiles } from '@qualityguard/analyzer';
+import { gitDiff, gitDiffCached } from './git.js';
 
 const SOURCE_EXTENSIONS = new Set(['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs']);
 const IGNORED = new Set(['node_modules', '.git', 'dist', 'build', 'coverage', '.next']);
@@ -40,15 +42,28 @@ async function main(): Promise<void> {
   const command = args[0];
   const target = args[1] ?? '.';
   const json = args.includes('--json');
+  const diffMode = args.includes('--diff');
+  const stagedMode = args.includes('--staged');
 
   if (command !== 'analyze') {
-    console.error('Usage: qualityguard analyze <path> [--json]');
+    console.error('Usage: qualityguard analyze <path> [--diff|--staged] [--json]');
     process.exitCode = 2;
     return;
   }
 
   const root = join(process.cwd(), target);
-  const files = await collectFiles(root);
+  let files: { path: string; content: string }[];
+
+  if (diffMode || stagedMode) {
+    const diff = stagedMode ? await gitDiffCached(root) : await gitDiff(root);
+    const changed = changedSourceFiles(diff);
+    const fullFiles = await collectFiles(root);
+    const byPath = new Map(fullFiles.map((file) => [file.path, file]));
+    files = changed.map((file) => byPath.get(file.path) ?? { path: file.path, content: file.patch });
+  } else {
+    files = await collectFiles(root);
+  }
+
   const result = analyze({ files });
   if (json) console.log(JSON.stringify(result, null, 2));
   else printResult(result);
