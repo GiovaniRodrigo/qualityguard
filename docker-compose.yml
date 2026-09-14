@@ -11,7 +11,9 @@ services:
     image: redis:7-alpine
     ports: ["6379:6379"]
   api:
-    build: ./apps/api
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
     environment:
       DATABASE_URL: postgres://qualityguard:qualityguard@postgres:5432/qualityguard
       PORT: 8787
