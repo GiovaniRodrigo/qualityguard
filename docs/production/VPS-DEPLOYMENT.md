@@ -2,7 +2,7 @@
 
 Domínio de produção: `qualityguard.gfcode.com.br`
 
-A stack usa Docker Compose em host único, PostgreSQL persistente, Redis persistente, API Node.js, Next.js e Caddy para HTTPS automático. Docker recomenda um Compose específico para mudanças de produção, incluindo restart policies, portas e serviços auxiliares. citeturn0search0
+A stack usa Docker Compose em host único, PostgreSQL persistente, Redis persistente, API Node.js, Next.js e Caddy para HTTPS automático.
 
 ## 1. DNS
 
@@ -76,7 +76,7 @@ A API executa a migration inicial antes de aceitar tráfego. O endpoint `/api/re
 
 ## 5. HTTPS
 
-O Caddy termina TLS no domínio `qualityguard.gfcode.com.br`. Para emissão automática do certificado, DNS deve apontar para o VPS e as portas 80/443 precisam estar acessíveis. Stripe exige HTTPS em webhooks em live mode. citeturn0search2
+O Caddy termina TLS no domínio `qualityguard.gfcode.com.br`. Para emissão automática do certificado, DNS deve apontar para o VPS e as portas 80/443 precisam estar acessíveis.
 
 ## 6. Stripe
 
@@ -92,9 +92,7 @@ Eventos principais:
 - `customer.subscription.updated`
 - `customer.subscription.deleted`
 
-A API valida `Stripe-Signature` usando o corpo bruto e aplica tolerância temporal de 5 minutos. Stripe recomenda verificar a assinatura e preservar o raw body. citeturn0search1turn0search2
-
-Eventos já processados são registrados em `stripe_events`, evitando processamento duplicado.
+A API valida `Stripe-Signature` usando o corpo bruto e aplica tolerância temporal de 5 minutos. Eventos já processados são registrados em `stripe_events`, evitando processamento duplicado.
 
 ## 7. Deploy automático
 
