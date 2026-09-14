@@ -1,9 +1,6 @@
 {
-  "name": "@qualityguard/api",
-  "private": true,
-  "version": "0.1.0",
-  "type": "module",
-  "scripts": {"build":"tsc -p tsconfig.json","typecheck":"tsc -p tsconfig.json --noEmit","lint":"tsc -p tsconfig.json --noEmit","test":"vitest run","dev":"node --watch dist/server.js"},
-  "dependencies": {"@qualityguard/analyzer":"workspace:*"},
-  "devDependencies": {"@types/node":"^22.15.0","typescript":"^5.9.2","vitest":"^3.2.4"}
+  "name":"@qualityguard/api","private":true,"version":"0.2.0","type":"module",
+  "scripts":{"build":"tsc -p tsconfig.json","typecheck":"tsc -p tsconfig.json --noEmit","lint":"tsc -p tsconfig.json --noEmit","test":"vitest run","dev":"node --watch dist/server.js"},
+  "dependencies":{"@qualityguard/analyzer":"workspace:*","pg":"^8.16.3"},
+  "devDependencies":{"@types/node":"^22.15.0","@types/pg":"^8.15.5","typescript":"^5.9.2","vitest":"^3.2.4"}
 }
