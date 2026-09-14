@@ -62,11 +62,16 @@ Use this scenario if the VPS `2.25.92.154` is permanently lost or corrupted.
 - Point DNS A-record `qualityguard.gfcode.com.br` to the new VPS public IP address.
 
 ### Step 2: Bootstrap Server Environment
-As `root` on the new server:
+From your local machine or using GitHub PAT:
 
 ```bash
-# Clone or download bootstrap script
-curl -fsSL https://raw.githubusercontent.com/GiovaniRodrigo/qualityguard/main/deploy/bootstrap-vps.sh | bash
+# Option A: From local machine via SSH
+ssh root@<NEW_VPS_IP> 'bash -s' < deploy/bootstrap-vps.sh
+
+# Option B: Direct on server with GitHub PAT
+curl -fsSL -H "Authorization: token <GITHUB_PAT>" \
+  -H "Accept: application/vnd.github.v3.raw" \
+  https://api.github.com/repos/GiovaniRodrigo/qualityguard/contents/deploy/bootstrap-vps.sh | bash
 ```
 
 This installs Docker, Docker Compose, UFW firewall, fail2ban, cron, creates user `qualityguard`, and prepares `/opt/qualityguard`.
