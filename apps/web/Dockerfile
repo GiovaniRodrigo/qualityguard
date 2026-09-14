@@ -13,7 +13,6 @@ ENV NODE_ENV=production
 RUN addgroup -S qualityguard && adduser -S qualityguard -G qualityguard
 COPY --from=build /app/apps/web/.next/standalone ./
 COPY --from=build /app/apps/web/.next/static ./apps/web/.next/static
-COPY --from=build /app/apps/web/public ./apps/web/public
 RUN chown -R qualityguard:qualityguard /app
 USER qualityguard
 EXPOSE 3000
