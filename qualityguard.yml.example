@@ -1,0 +1,21 @@
+version: 1
+
+rules:
+  architecture.no-infrastructure-import:
+    enabled: true
+    severity: high
+  security.hardcoded-secret:
+    enabled: true
+    severity: critical
+  maintainability.high-complexity:
+    enabled: true
+  testing.missing-test:
+    enabled: false
+
+quality:
+  minimum_score: 80
+
+gate:
+  block_on:
+    - critical
+    - high
