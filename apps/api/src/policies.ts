@@ -1,0 +1,2 @@
+export interface TeamPolicy { id:string; organizationId:string; name:string; minimumScore:number; blockOn:Array<'critical'|'high'|'medium'|'low'|'info'>; requireAiReview:boolean; createdAt:string; }
+export class PolicyStore { private readonly values=new Map<string,TeamPolicy>(); list(orgId:string){return [...this.values.values()].filter(p=>p.organizationId===orgId);} save(policy:TeamPolicy){this.values.set(policy.id,policy);return policy;} }
