@@ -1,0 +1,56 @@
+name: Deploy Production
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: qualityguard-production
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate deployment configuration
+        env:
+          HOST: ${{ secrets.PRODUCTION_HOST }}
+          USER: ${{ secrets.PRODUCTION_USER }}
+          KEY: ${{ secrets.PRODUCTION_SSH_KEY }}
+        run: |
+          test -n "$HOST"
+          test -n "$USER"
+          test -n "$KEY"
+
+      - name: Configure SSH
+        env:
+          SSH_KEY: ${{ secrets.PRODUCTION_SSH_KEY }}
+          SSH_HOST: ${{ secrets.PRODUCTION_HOST }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/qualityguard
+          chmod 600 ~/.ssh/qualityguard
+          ssh-keyscan -H "$SSH_HOST" >> ~/.ssh/known_hosts
+
+      - name: Deploy over SSH
+        env:
+          SSH_HOST: ${{ secrets.PRODUCTION_HOST }}
+          SSH_USER: ${{ secrets.PRODUCTION_USER }}
+        run: |
+          ssh -i ~/.ssh/qualityguard "$SSH_USER@$SSH_HOST" <<'REMOTE'
+          set -euo pipefail
+          cd /opt/qualityguard
+          git fetch origin main
+          git checkout main
+          git reset --hard origin/main
+          test -f .env.production
+          docker compose --env-file .env.production -f docker-compose.production.yml build --pull
+          docker compose --env-file .env.production -f docker-compose.production.yml up -d --remove-orphans
+          docker image prune -f
+          docker compose --env-file .env.production -f docker-compose.production.yml ps
+          curl --fail --silent --show-error https://qualityguard.gfcode.com.br/api/health
+          REMOTE
