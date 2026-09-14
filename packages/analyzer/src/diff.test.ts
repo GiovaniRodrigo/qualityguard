@@ -14,7 +14,7 @@ index 123..456 100644
 
     const [file] = parseUnifiedDiff(diff);
     expect(file).toMatchObject({ path: 'src/application/UserService.ts', additions: 1, deletions: 1 });
-    expect(file.patch).toContain('+const b = 2;');
+    expect(file?.patch).toContain('+const b = 2;');
   });
 
   it('detects new, deleted and renamed files', () => {
@@ -37,7 +37,7 @@ rename to src/d.ts`;
 
     const files = parseUnifiedDiff(diff);
     expect(files.map((file) => file.change)).toEqual(['added', 'deleted', 'renamed']);
-    expect(files[2].previousPath).toBe('src/c.ts');
+    expect(files[2]?.previousPath).toBe('src/c.ts');
   });
 });
 

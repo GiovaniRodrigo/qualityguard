@@ -14,7 +14,7 @@ describe('review scoring', () => {
   });
 
   it('blocks when an open finding blocks', () => {
-    const result = analyze({ files: [], rules: [{ id: 'test', analyze: () => [base('high', 'block')] }] });
+    const result = analyze({ files: [{ path: 'src/example.ts', content: '' }], rules: [{ id: 'test', analyze: () => [base('high', 'block')] }] });
     expect(result.decision).toBe('block');
     expect(result.score).toBe(80);
   });
