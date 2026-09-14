@@ -1,0 +1,8 @@
+CREATE TABLE users (id UUID PRIMARY KEY, email TEXT UNIQUE NOT NULL, password_hash TEXT NOT NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT now());
+CREATE TABLE organizations (id UUID PRIMARY KEY, name TEXT NOT NULL, owner_id UUID NOT NULL REFERENCES users(id), plan TEXT NOT NULL DEFAULT 'community', stripe_customer_id TEXT UNIQUE, stripe_subscription_id TEXT UNIQUE, subscription_status TEXT, created_at TIMESTAMPTZ NOT NULL DEFAULT now());
+CREATE TABLE organization_members (organization_id UUID REFERENCES organizations(id) ON DELETE CASCADE, user_id UUID REFERENCES users(id) ON DELETE CASCADE, role TEXT NOT NULL DEFAULT 'member', PRIMARY KEY (organization_id,user_id));
+CREATE TABLE projects (id UUID PRIMARY KEY, organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE, name TEXT NOT NULL, repository TEXT NOT NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT now());
+CREATE TABLE reviews (id UUID PRIMARY KEY, project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE, commit_sha TEXT, score INTEGER NOT NULL, decision TEXT NOT NULL, findings JSONB NOT NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT now());
+CREATE TABLE usage_events (id UUID PRIMARY KEY, organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE, event_type TEXT NOT NULL, quantity INTEGER NOT NULL DEFAULT 1, metadata JSONB NOT NULL DEFAULT '{}', created_at TIMESTAMPTZ NOT NULL DEFAULT now());
+CREATE INDEX reviews_project_created_idx ON reviews(project_id, created_at DESC);
+CREATE INDEX usage_org_created_idx ON usage_events(organization_id, created_at DESC);
