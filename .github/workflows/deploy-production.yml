@@ -11,20 +11,11 @@ concurrency:
 
 jobs:
   deploy:
+    if: ${{ secrets.PRODUCTION_HOST != '' && secrets.PRODUCTION_USER != '' && secrets.PRODUCTION_SSH_KEY != '' }}
     runs-on: ubuntu-latest
     environment: production
     steps:
       - uses: actions/checkout@v4
-
-      - name: Validate deployment configuration
-        env:
-          HOST: ${{ secrets.PRODUCTION_HOST }}
-          USER: ${{ secrets.PRODUCTION_USER }}
-          KEY: ${{ secrets.PRODUCTION_SSH_KEY }}
-        run: |
-          test -n "$HOST"
-          test -n "$USER"
-          test -n "$KEY"
 
       - name: Configure SSH
         env:
