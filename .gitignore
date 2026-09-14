@@ -2,8 +2,11 @@ node_modules/
 dist/
 coverage/
 .turbo/
+.next/
+*.tsbuildinfo
 *.log
 .env
 .env.*
 !.env.example
 !.env.production.example
+

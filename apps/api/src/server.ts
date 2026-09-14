@@ -78,7 +78,13 @@ async function handler(req: IncomingMessage, res: ServerResponse): Promise<void>
 
   if (req.method === 'GET' && url.pathname === '/health') {
     const database = await healthDatabase();
-    return json(res, database ? 200 : 503, { ok: database, service: 'qualityguard-api', database });
+    return json(res, database ? 200 : 503, {
+      ok: database,
+      service: 'qualityguard-api',
+      version: process.env.npm_package_version ?? '0.3.0',
+      commit: process.env.GIT_COMMIT ?? process.env.COMMIT_SHA ?? 'unknown',
+      database,
+    });
   }
   if (req.method === 'GET' && url.pathname === '/ready') {
     const database = await healthDatabase();
@@ -88,7 +94,8 @@ async function handler(req: IncomingMessage, res: ServerResponse): Promise<void>
   if (req.method === 'POST' && url.pathname === '/webhooks/github') {
     const payload = await body(req);
     const secret = process.env.GITHUB_WEBHOOK_SECRET;
-    if (!secret || !verifyGitHubWebhook(payload, req.headers['x-hub-signature-256'], secret)) return json(res, 401, { error: 'invalid GitHub signature' });
+    const signature = req.headers['x-hub-signature-256'];
+    if (!secret || typeof signature !== 'string' || !verifyGitHubWebhook(payload, signature, secret)) return json(res, 401, { error: 'invalid GitHub signature' });
     let event: PullRequestEvent;
     try { event = JSON.parse(payload) as PullRequestEvent; } catch { return json(res, 400, { error: 'invalid JSON payload' }); }
     res.writeHead(202, { 'content-type': 'application/json; charset=utf-8' });
@@ -110,7 +117,13 @@ async function handler(req: IncomingMessage, res: ServerResponse): Promise<void>
     const event = mapSubscriptionEvent(parsed);
     if (event) {
       const org = await store.findOrganizationByStripeCustomer(event.customerId);
-      if (org) await store.updateSubscription(org.id, { subscriptionId: event.subscriptionId, status: event.status, plan: event.plan });
+      if (org) {
+        await store.updateSubscription(org.id, {
+          ...(event.subscriptionId ? { subscriptionId: event.subscriptionId } : {}),
+          ...(event.status ? { status: event.status } : {}),
+          ...(event.plan ? { plan: event.plan } : {}),
+        });
+      }
     }
     return json(res, 200, { received: true });
   }

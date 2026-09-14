@@ -1,7 +1,7 @@
 export { analyze, calculateScore } from './analyzer.js';
 export { analyzeDiff } from './diff-review.js';
 export { parseUnifiedDiff, changedSourceFiles } from './diff.js';
-export { defaultRules, noInfrastructureImport, circularDependency, hardcodedSecret, highComplexity, missingTest } from './rules.js';
+export { defaultRules, noInfrastructureImport, hardcodedSecret, highComplexity, missingTest } from './rules.js';
 export { loadConfig, normalizeConfig, configuredRules, applySeverityOverrides } from './policy.js';
 export { findingSchema, validateFinding, validateFindings } from './validation.js';
 export { findingFingerprint, deduplicateFindings } from './fingerprint.js';
