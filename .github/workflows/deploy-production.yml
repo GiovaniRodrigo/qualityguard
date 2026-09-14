@@ -11,7 +11,7 @@ concurrency:
 
 jobs:
   deploy:
-    if: ${{ secrets.PRODUCTION_HOST != '' && secrets.PRODUCTION_USER != '' && secrets.PRODUCTION_SSH_KEY != '' }}
+    if: ${{ vars.PRODUCTION_DEPLOY_ENABLED == 'true' }}
     runs-on: ubuntu-latest
     environment: production
     steps:
@@ -22,6 +22,8 @@ jobs:
           SSH_KEY: ${{ secrets.PRODUCTION_SSH_KEY }}
           SSH_HOST: ${{ secrets.PRODUCTION_HOST }}
         run: |
+          test -n "$SSH_KEY"
+          test -n "$SSH_HOST"
           install -m 700 -d ~/.ssh
           printf '%s\n' "$SSH_KEY" > ~/.ssh/qualityguard
           chmod 600 ~/.ssh/qualityguard
@@ -32,6 +34,7 @@ jobs:
           SSH_HOST: ${{ secrets.PRODUCTION_HOST }}
           SSH_USER: ${{ secrets.PRODUCTION_USER }}
         run: |
+          test -n "$SSH_USER"
           ssh -i ~/.ssh/qualityguard "$SSH_USER@$SSH_HOST" <<'REMOTE'
           set -euo pipefail
           cd /opt/qualityguard
