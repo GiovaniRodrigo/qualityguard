@@ -1,0 +1,50 @@
+import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
+import { randomUUID } from 'node:crypto';
+import { hashPassword, signToken, verifyPassword, verifyToken } from './auth.js';
+import { MemoryStore } from './store.js';
+import { createCheckoutSession, createPortalSession, verifyStripeSignature, type Plan } from './billing.js';
+
+const store = new MemoryStore();
+const port = Number(process.env.PORT ?? 8787);
+
+function json(res: ServerResponse, status: number, body: unknown) { res.writeHead(status, {'content-type':'application/json; charset=utf-8'}); res.end(JSON.stringify(body)); }
+async function body(req: IncomingMessage): Promise<string> { const chunks: Buffer[] = []; for await (const chunk of req) chunks.push(Buffer.from(chunk)); return Buffer.concat(chunks).toString('utf8'); }
+function auth(req: IncomingMessage): string | null { const value = req.headers.authorization; return value?.startsWith('Bearer ') ? verifyToken(value.slice(7)) : null; }
+
+async function handler(req: IncomingMessage, res: ServerResponse) {
+  const url = new URL(req.url ?? '/', `http://${req.headers.host ?? 'localhost'}`);
+  if (req.method === 'GET' && url.pathname === '/health') return json(res, 200, { ok: true, service: 'qualityguard-api' });
+  if (req.method === 'POST' && url.pathname === '/auth/register') {
+    const data = JSON.parse(await body(req)) as { email?: string; password?: string; organization?: string };
+    if (!data.email || !data.password || data.password.length < 12) return json(res, 400, { error: 'email and password (12+ chars) are required' });
+    if ([...store.users.values()].some((u) => u.email === data.email)) return json(res, 409, { error: 'email already registered' });
+    const id = randomUUID(); store.users.set(id, { id, email: data.email, passwordHash: hashPassword(data.password), createdAt: new Date().toISOString() });
+    const orgId = randomUUID(); store.organizations.set(orgId, { id: orgId, name: data.organization ?? `${data.email} organization`, ownerId: id, plan: 'community' });
+    return json(res, 201, { token: signToken(id), userId: id, organizationId: orgId });
+  }
+  if (req.method === 'POST' && url.pathname === '/auth/login') {
+    const data = JSON.parse(await body(req)) as { email?: string; password?: string }; const user = [...store.users.values()].find((u) => u.email === data.email);
+    if (!user || !data.password || !verifyPassword(data.password, user.passwordHash)) return json(res, 401, { error: 'invalid credentials' });
+    return json(res, 200, { token: signToken(user.id), userId: user.id });
+  }
+  const userId = auth(req); if (!userId) return json(res, 401, { error: 'authentication required' });
+  const org = [...store.organizations.values()].find((o) => o.ownerId === userId); if (!org) return json(res, 403, { error: 'organization not found' });
+  if (req.method === 'GET' && url.pathname === '/me') return json(res, 200, { user: store.users.get(userId), organization: org, projects: [...store.projects.values()].filter((p) => p.organizationId === org.id) });
+  if (req.method === 'POST' && url.pathname === '/projects') {
+    const data = JSON.parse(await body(req)) as { name?: string; repository?: string }; if (!data.name || !data.repository) return json(res, 400, { error: 'name and repository are required' });
+    const project = { id: randomUUID(), organizationId: org.id, name: data.name, repository: data.repository, createdAt: new Date().toISOString() }; store.projects.set(project.id, project); return json(res, 201, project);
+  }
+  if (req.method === 'POST' && url.pathname === '/billing/checkout') {
+    const data = JSON.parse(await body(req)) as { plan?: Plan; successUrl?: string; cancelUrl?: string };
+    if (!data.plan || data.plan === 'community' || !data.successUrl || !data.cancelUrl) return json(res, 400, { error: 'plan, successUrl and cancelUrl are required' });
+    if (!process.env.STRIPE_CUSTOMER_ID && !org.stripeCustomerId) return json(res, 400, { error: 'Stripe customer is not configured for this organization' });
+    const result = await createCheckoutSession({ customer: { id: org.stripeCustomerId ?? process.env.STRIPE_CUSTOMER_ID!, email: store.users.get(userId)!.email }, plan: data.plan as Exclude<Plan,'community'>, successUrl: data.successUrl, cancelUrl: data.cancelUrl }); return json(res, 200, result);
+  }
+  if (req.method === 'POST' && url.pathname === '/billing/portal') { const result = await createPortalSession(org.stripeCustomerId ?? process.env.STRIPE_CUSTOMER_ID ?? '', JSON.parse(await body(req)).returnUrl); return json(res, 200, result); }
+  if (req.method === 'POST' && url.pathname === '/webhooks/stripe') return json(res, 400, { error: 'Stripe webhook must be public and unauthenticated' });
+  return json(res, 404, { error: 'not found' });
+}
+
+createServer((req, res) => { handler(req, res).catch((error: unknown) => json(res, 500, { error: error instanceof Error ? error.message : 'internal error' })); }).listen(port, () => console.log(`QualityGuard API listening on :${port}`));
+
+export { store, verifyStripeSignature };
