@@ -2,7 +2,6 @@ FROM node:22-alpine AS build
 WORKDIR /app
 RUN corepack enable
 COPY . .
-COPY package.json ./apps/api/package.json
 RUN pnpm install --no-frozen-lockfile
 RUN pnpm --filter @qualityguard/api build
 FROM node:22-alpine
