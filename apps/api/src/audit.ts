@@ -1,0 +1,2 @@
+export interface AuditEvent { id:string; organizationId:string; actorId:string; action:string; resource:string; metadata:Record<string,unknown>; createdAt:string; }
+export class AuditLog { private readonly events:AuditEvent[]=[]; append(event:AuditEvent){this.events.push(event);return event;} list(organizationId:string){return this.events.filter(e=>e.organizationId===organizationId).slice().reverse();} }
