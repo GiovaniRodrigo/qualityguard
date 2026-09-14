@@ -2,63 +2,24 @@ import { createHmac, timingSafeEqual } from 'node:crypto';
 
 export type Plan = 'community' | 'pro' | 'team' | 'enterprise';
 export interface BillingCustomer { id: string; email: string; }
-export interface CheckoutRequest {
-  customer: BillingCustomer;
-  organizationId: string;
-  plan: Exclude<Plan, 'community'>;
-  successUrl: string;
-  cancelUrl: string;
-}
+export interface CheckoutRequest { customer: BillingCustomer; organizationId: string; plan: Exclude<Plan, 'community'>; successUrl: string; cancelUrl: string; }
 export interface CheckoutResult { id: string; url: string; }
 
-const priceMap: Record<Exclude<Plan, 'community'>, string | undefined> = {
-  pro: process.env.STRIPE_PRICE_PRO,
-  team: process.env.STRIPE_PRICE_TEAM,
-  enterprise: process.env.STRIPE_PRICE_ENTERPRISE,
-};
-
-function requireSecret(): string {
-  const value = process.env.STRIPE_SECRET_KEY;
-  if (!value) throw new Error('Stripe billing is not configured');
-  return value;
-}
-
+const priceMap: Record<Exclude<Plan, 'community'>, string | undefined> = { pro: process.env.STRIPE_PRICE_PRO, team: process.env.STRIPE_PRICE_TEAM, enterprise: process.env.STRIPE_PRICE_ENTERPRISE };
+function requireSecret(): string { const value = process.env.STRIPE_SECRET_KEY; if (!value) throw new Error('Stripe billing is not configured'); return value; }
 async function stripe(path: string, body: URLSearchParams): Promise<Record<string, unknown>> {
-  const response = await fetch(`https://api.stripe.com/v1/${path}`, {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${requireSecret()}`, 'Content-Type': 'application/x-www-form-urlencoded' },
-    body,
-  });
+  const response = await fetch(`https://api.stripe.com/v1/${path}`, { method: 'POST', headers: { Authorization: `Bearer ${requireSecret()}`, 'Content-Type': 'application/x-www-form-urlencoded' }, body });
   if (!response.ok) throw new Error(`Stripe ${path} failed: ${response.status}`);
   return response.json() as Promise<Record<string, unknown>>;
 }
-
-export async function createCustomer(email: string): Promise<BillingCustomer> {
-  const data = await stripe('customers', new URLSearchParams({ email }));
-  return { id: String(data.id), email };
-}
-
+export async function createCustomer(email: string): Promise<BillingCustomer> { const data = await stripe('customers', new URLSearchParams({ email })); return { id: String(data.id), email }; }
 export async function createCheckoutSession(request: CheckoutRequest): Promise<CheckoutResult> {
   const price = priceMap[request.plan];
   if (!price) throw new Error(`Stripe price is not configured for ${request.plan}`);
-  const data = await stripe('checkout/sessions', new URLSearchParams({
-    mode: 'subscription',
-    customer: request.customer.id,
-    'line_items[0][price]': price,
-    'line_items[0][quantity]': '1',
-    'subscription_data[metadata][organization_id]': request.organizationId,
-    'subscription_data[metadata][plan]': request.plan,
-    success_url: request.successUrl,
-    cancel_url: request.cancelUrl,
-  }));
+  const data = await stripe('checkout/sessions', new URLSearchParams({ mode: 'subscription', customer: request.customer.id, 'line_items[0][price]': price, 'line_items[0][quantity]': '1', 'subscription_data[metadata][organization_id]': request.organizationId, 'subscription_data[metadata][plan]': request.plan, success_url: request.successUrl, cancel_url: request.cancelUrl }));
   return { id: String(data.id), url: String(data.url) };
 }
-
-export async function createPortalSession(customerId: string, returnUrl: string): Promise<{ url: string }> {
-  const data = await stripe('billing_portal/sessions', new URLSearchParams({ customer: customerId, return_url: returnUrl }));
-  return { url: String(data.url) };
-}
-
+export async function createPortalSession(customerId: string, returnUrl: string): Promise<{ url: string }> { const data = await stripe('billing_portal/sessions', new URLSearchParams({ customer: customerId, return_url: returnUrl })); return { url: String(data.url) }; }
 export function verifyStripeSignature(payload: string, signature: string, secret: string, toleranceSeconds = 300): boolean {
   const timestamp = signature.split(',').find((part) => part.startsWith('t='))?.slice(2);
   const signatures = signature.split(',').filter((part) => part.startsWith('v1=')).map((part) => part.slice(3));
@@ -69,19 +30,12 @@ export function verifyStripeSignature(payload: string, signature: string, secret
   return signatures.some((value) => value.length === expected.length && timingSafeEqual(Buffer.from(value), Buffer.from(expected)));
 }
 
-export interface StripeSubscriptionEvent {
-  id?: string;
-  type: string;
-  data: { object: { customer?: string; id?: string; status?: string; metadata?: Record<string, string> } };
-}
-
+export interface StripeSubscriptionEvent { id?: string; type: string; data: { object: { customer?: string; id?: string; status?: string; metadata?: Record<string, string> } }; }
 export function mapSubscriptionEvent(event: StripeSubscriptionEvent) {
   if (!event.type.startsWith('customer.subscription.') || !event.data.object.customer) return null;
   const metadataPlan = event.data.object.metadata?.plan;
-  return {
-    customerId: event.data.object.customer,
-    subscriptionId: event.data.object.id,
-    status: event.data.object.status,
-    plan: metadataPlan === 'pro' || metadataPlan === 'team' || metadataPlan === 'enterprise' ? metadataPlan : undefined,
-  };
+  const plan = event.type === 'customer.subscription.deleted'
+    ? 'community'
+    : metadataPlan === 'pro' || metadataPlan === 'team' || metadataPlan === 'enterprise' ? metadataPlan : undefined;
+  return { customerId: event.data.object.customer, subscriptionId: event.data.object.id, status: event.data.object.status, plan: plan as Plan | undefined };
 }
