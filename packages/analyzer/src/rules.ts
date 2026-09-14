@@ -18,7 +18,7 @@ export const noInfrastructureImport: Rule = {
     if (!/(^|[/\\])(application|domain)([/\\])/i.test(file.path)) return [];
     return file.content.split(/\r?\n/).flatMap((line, index) => {
       const match = line.match(importPattern);
-      if (!match || !infrastructureImport.test(match[1])) return [];
+      if (!match || !match[1] || !infrastructureImport.test(match[1])) return [];
       return [finding(file, index + 1, {
         severity: 'high', category: 'architecture', status: 'open', decision: 'block',
         title: 'Application or domain layer depends on infrastructure',

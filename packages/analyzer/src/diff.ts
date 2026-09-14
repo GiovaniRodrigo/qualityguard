@@ -35,7 +35,7 @@ export function parseUnifiedDiff(diff: string): DiffFile[] {
 
   for (const line of lines) {
     const header = line.match(FILE_HEADER);
-    if (header) {
+    if (header && header[1] && header[2]) {
       flush();
       current = { path: header[2], previousPath: header[1], change: 'modified', additions: 0, deletions: 0, patch: '' };
       continue;
@@ -45,8 +45,8 @@ export function parseUnifiedDiff(diff: string): DiffFile[] {
     if (DELETED_FILE.test(line)) current.change = 'deleted';
     const renameFrom = line.match(RENAME_FROM);
     const renameTo = line.match(RENAME_TO);
-    if (renameFrom) current.previousPath = renameFrom[1];
-    if (renameTo) { current.path = renameTo[1]; current.change = 'renamed'; }
+    if (renameFrom?.[1]) current.previousPath = renameFrom[1];
+    if (renameTo?.[1]) { current.path = renameTo[1]; current.change = 'renamed'; }
     const hunkMatch = line.match(HUNK);
     if (hunkMatch) {
       hunk = true;

@@ -56,9 +56,8 @@ async function runAnalysis(root: string, args: string[]) {
   const baseline = await loadBaseline(root);
   const active = excludeBaselineFindings(findings, baseline);
   const score = Math.max(0, Math.min(100, 100 - active.filter((f) => f.status === 'open').reduce((n, f) => n + ({ critical: 35, high: 20, medium: 10, low: 3, info: 0 }[f.severity]), 0)));
-  const result = { ...base, findings: active, score, decision: 'approve' as const };
   const gate = evaluateGate(score, active, { minimumScore: config.quality.minimum_score, blockOn: config.gate.block_on });
-  result.decision = gate.decision;
+  const result = { ...base, findings: active, score, decision: gate.decision };
   return { result, gate };
 }
 

@@ -1,13 +1,14 @@
 export interface DependencyEdge { from: string; to: string; kind: 'import'|'require'; }
 export interface ArchitectureGraph { nodes: string[]; edges: DependencyEdge[]; }
 
-const importRegex = /(?:import(?:[\s\S]*?from\s*)?|export(?:[\s\S]*?from\s*)?|require\(\s*)['"]([^'"]+)['"]/g;
+const importRegex = /(?:from\s+['"]|import\s+['"]|(?:import|require)\s*\(\s*['"])([^'"]+)['"]/g;
 export function buildDependencyGraph(files: {path:string;content:string}[]): ArchitectureGraph {
-  const nodes = files.map((f) => f.path); const nodeSet = new Set(nodes); const edges: DependencyEdge[] = [];
+  const nodes = files.map((f) => f.path); const edges: DependencyEdge[] = [];
   for (const file of files) for (const match of file.content.matchAll(importRegex)) {
     const target = match[1]; if (!target?.startsWith('.')) continue;
     const parts = file.path.split('/'); parts.pop(); const resolved = normalize([...parts, ...target.split('/')].join('/'));
-    const candidate = nodes.find((n) => n === resolved || n.replace(/\.(ts|tsx|js|jsx|mjs|cjs)$/,'') === resolved || n.replace(/\/index\.(ts|tsx|js|jsx|mjs|cjs)$/,'') === resolved);
+    const cleanResolved = resolved.replace(/\.(ts|tsx|js|jsx|mjs|cjs)$/,'');
+    const candidate = nodes.find((n) => n === resolved || n.replace(/\.(ts|tsx|js|jsx|mjs|cjs)$/,'') === cleanResolved || n.replace(/\/index\.(ts|tsx|js|jsx|mjs|cjs)$/,'') === cleanResolved);
     if (candidate) edges.push({from:file.path,to:candidate,kind:file.content.includes('require(')?'require':'import'});
   }
   return {nodes,edges};
