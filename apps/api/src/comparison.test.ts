@@ -11,8 +11,9 @@ describe('QG-TDD-008 — API Comparison & Tenant Isolation Integration Tests', (
   beforeAll(async () => {
     server = createServer((req, res) => {
       handler(req, res).catch((err: unknown) => {
+        console.error(err);
         res.writeHead(500);
-        res.end(String(err));
+        res.end("Internal Server Error");
       });
     });
     await new Promise<void>((resolve) => {
