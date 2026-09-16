@@ -1,6 +1,7 @@
 FROM node:22-alpine AS build
 WORKDIR /app
-RUN corepack enable
+# corepack is no longer bundled with recent node images, so install it explicitly
+RUN npm install -g corepack@latest && corepack enable
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
 COPY apps/api/package.json apps/api/package.json
 COPY apps/cli/package.json apps/cli/package.json
