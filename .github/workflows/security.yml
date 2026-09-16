@@ -11,13 +11,10 @@ permissions:
   contents: read
 
 jobs:
-  # CodeQL code scanning requires GitHub Advanced Security on private repos.
-  # Gate it to public repositories so it activates automatically once this repo
-  # is published open-source, and does not hard-fail while the repo is private.
+  # CodeQL code scanning (free on public repositories).
   codeql:
     name: CodeQL
     runs-on: ubuntu-latest
-    if: ${{ github.event.repository.private == false }}
     permissions:
       security-events: write
       actions: read
@@ -35,13 +32,11 @@ jobs:
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
 
-  # Dependency review requires the Dependency Graph + GitHub Advanced Security on
-  # private repos. Gate to public PRs so it activates on publish without blocking
-  # while the repo is private.
+  # Dependency review (free on public repositories); runs on pull requests only.
   dependency-review:
     name: Dependency review
     runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'pull_request' && github.event.repository.private == false }}
+    if: github.event_name == 'pull_request'
     permissions:
       contents: read
       pull-requests: write
