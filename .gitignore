@@ -1,6 +1,11 @@
 node_modules/
 dist/
 coverage/
+# ...but never ignore source or test-fixture directories named "coverage"
+!**/src/coverage/
+!**/src/coverage/**
+!fixtures/coverage/
+!fixtures/coverage/**
 .turbo/
 .next/
 *.tsbuildinfo
