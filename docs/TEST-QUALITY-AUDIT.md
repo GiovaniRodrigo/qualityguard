@@ -10,21 +10,10 @@
 
 QualityGuard enforces a test pyramid spanning unit, deterministic domain, integration, and full end-to-end testing across 8 monorepo workspaces:
 
-```
-                            ┌─────────────────────┐
-                            │      E2E Tests      │  (Real remote repo clone,
-                            │       (1 test)      │   akitaonrails/ai-memory)
-                            └──────────┬──────────┘
-                                       │
-                        ┌──────────────┴──────────────┐
-                        │      Integration Tests      │  (API Server, GitHub PR
-                        │          (52 tests)         │   Governance, Cloner, Queue)
-                        └──────────────┬──────────────┘
-                                       │
-                 ┌─────────────────────┴─────────────────────┐
-                 │                Unit Tests                 │  (AST Analyzer, Graph,
-                 │                (39 tests)                 │   Diff Hunks, Auth, Gate)
-                 └───────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    E2E["E2E Tests (1 test)<br/>Real remote repo clone,<br/>akitaonrails/ai-memory"] --> Int["Integration Tests (52 tests)<br/>API Server, GitHub PR<br/>Governance, Cloner, Queue"]
+    Int --> Unit["Unit Tests (39 tests)<br/>AST Analyzer, Graph,<br/>Diff Hunks, Auth, Gate"]
 ```
 
 ---

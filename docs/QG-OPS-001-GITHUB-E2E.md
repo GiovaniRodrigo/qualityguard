@@ -11,38 +11,11 @@
 
 The QualityGuard GitHub Integration automates Pull Request code governance via GitHub App webhooks and Octokit REST API clients.
 
-```
-                           [ GitHub Enterprise / github.com ]
-                                          │
-                                          │ 1. PR Opened / Synchronize / Reopened
-                                          │ POST https://qualityguard.gfcode.com.br/api/webhooks/github
-                                          ▼
-                         ┌─────────────────────────────────┐
-                         │   Caddy 2 Reverse Proxy (TLS)   │
-                         └────────────────┬────────────────┘
-                                          │
-                                          │ Proxies raw body + headers
-                                          ▼
-┌────────────────────────────────────────────────────────────────────────────────────────┐
-│ Fastify Ingress Server (apps/api/src/server.ts)                                        │
-│                                                                                        │
-│ 1. HMAC-SHA256 Verification: crypto.timingSafeEqual(headerSig, computedHmac)          │
-│ 2. Idempotency Gate: checks X-GitHub-Delivery against in-flight & processed cache     │
-│ 3. Quick ACK: returns HTTP 202 Accepted (<25ms)                                        │
-│ 4. Queue Dispatch: enqueues background PR review job                                   │
-└────────────────────────────────────────┬───────────────────────────────────────────────┘
-                                         │
-                                         ▼
-┌────────────────────────────────────────────────────────────────────────────────────────┐
-│ PR Governance Engine (integrations/github/src/governance.ts)                           │
-│                                                                                        │
-│ 1. Fetch PR Diff & Modified Hunks via Octokit                                          │
-│ 2. Build Unified Diff Position Map (diff-mapping.ts)                                   │
-│ 3. Run Rule Engine (Circular dependencies, security vulnerabilities, dead code)        │
-│ 4. Map Findings to Diff Ranges (single-line or multi-line inline comments)             │
-│ 5. Publish GitHub Check Run (conclusion: "success" | "failure")                       │
-│ 6. Post GitHub PR Review (REQUEST_CHANGES | COMMENT | APPROVE) with inline comments   │
-└────────────────────────────────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    GH["GitHub Enterprise / github.com"] -->|"1. PR Opened / Synchronize / Reopened<br/>POST https://qualityguard.gfcode.com.br/api/webhooks/github"| Caddy["Caddy 2 Reverse Proxy (TLS)"]
+    Caddy -->|"Proxies raw body + headers"| Ingress["Fastify Ingress Server (apps/api/src/server.ts)<br/>1. HMAC-SHA256 Verification: crypto.timingSafeEqual(headerSig, computedHmac)<br/>2. Idempotency Gate: checks X-GitHub-Delivery against in-flight & processed cache<br/>3. Quick ACK: returns HTTP 202 Accepted (&lt;25ms)<br/>4. Queue Dispatch: enqueues background PR review job"]
+    Ingress --> Gov["PR Governance Engine (integrations/github/src/governance.ts)<br/>1. Fetch PR Diff & Modified Hunks via Octokit<br/>2. Build Unified Diff Position Map (diff-mapping.ts)<br/>3. Run Rule Engine (Circular dependencies, security vulnerabilities, dead code)<br/>4. Map Findings to Diff Ranges (single-line or multi-line inline comments)<br/>5. Publish GitHub Check Run (conclusion: 'success' | 'failure')<br/>6. Post GitHub PR Review (REQUEST_CHANGES | COMMENT | APPROVE) with inline comments"]
 ```
 
 ---

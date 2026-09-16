@@ -1,0 +1,169 @@
+<!doctype html><html><head><meta charset="utf-8"></head><body><h4>#0 README.md</h4><pre class="mermaid">flowchart TD
+    Dev["Developer — git push main"] --&gt; CI["GitHub Actions CI&lt;br/&gt;Typecheck / Test / Build"]
+    CI --&gt; Pass{{CI Passes}}
+    Pass --&gt; CD["GitHub Actions CD (SSH)"]
+    CD --&gt; VPS["VPS 203.0.113.10"]
+    VPS --&gt; Env["/opt/qualityguard&lt;br/&gt;(.env.production)"]
+    Env --&gt; Compose["Docker Compose"]
+    Compose --&gt; Caddy["Caddy — HTTPS :443&lt;br/&gt;qualityguard.example.com"]
+    Compose --&gt; Web["Web — Next.js :3000"]
+    Compose --&gt; API["API — Node.js :8787"]
+    Web --&gt; PG["PostgreSQL 16 :5432&lt;br/&gt;(qualityguard_pg)"]
+    API --&gt; PG
+    Web --&gt; Redis["Redis 7 :6379&lt;br/&gt;(qualityguard_redis)"]
+    API --&gt; Redis
+</pre>
+<h4>#1 README.md</h4><pre class="mermaid">flowchart TD
+    A["CLI / GitHub PR"] --&gt; B["Diff + repository context"]
+    B --&gt; C["Deterministic rules → baseline + deduplication"]
+    C --&gt; D["AST + dependency graph → architecture drift"]
+    D --&gt; E["Optional AI providers → strict schema validation"]
+    E --&gt; F["Findings → score → Quality Gate"]
+    F --&gt; G["GitHub Check / dashboard"]
+    G --&gt; H["Organization → usage metering → Stripe subscription"]
+</pre>
+<h4>#2 docs/architecture/ARCHITECTURE.md</h4><pre class="mermaid">flowchart TD
+    Delivery["Delivery / Adapters&lt;br/&gt;CLI | GitHub | Web"] --&gt; App["Application&lt;br/&gt;Review Orchestration"]
+    App --&gt; Domain["Domain&lt;br/&gt;Findings | Rules&lt;br/&gt;Decisions | Scores"]
+    Domain --&gt; Det["Deterministic Analyzer"]
+    Domain --&gt; AI["AI Adapter&lt;br/&gt;Provider-neutral"]
+</pre>
+<h4>#3 docs/architecture/ARCHITECTURE.md</h4><pre class="mermaid">flowchart TD
+    A["Input"] --&gt; B["Normalize"]
+    B --&gt; C["Collect repository context"]
+    C --&gt; D["Analyze diff"]
+    D --&gt; E["Run deterministic rules"]
+    E --&gt; F["Optional AI analysis"]
+    F --&gt; G["Parse JSON"]
+    G --&gt; H["Validate schema"]
+    H --&gt; I["Map findings"]
+    I --&gt; J["Deduplicate / correlate"]
+    J --&gt; K["Calculate score"]
+    K --&gt; L["Calculate decision"]
+    L --&gt; M["Render / publish"]
+</pre>
+<h4>#4 docs/architecture/ARCHITECTURE.md</h4><pre class="mermaid">flowchart LR
+    P["LLMProvider"] --&gt; A["analyze(context, prompt)"]
+    A --&gt; R["StructuredLLMResponse"]
+</pre>
+<h4>#5 docs/architecture/ARCHITECTURE.md</h4><pre class="mermaid">flowchart LR
+    CLI --&gt; App["Application"]
+    App --&gt; Domain
+    Domain --&gt; Det["Deterministic Rules"]
+    Domain --&gt; AI["AI Adapter"]
+</pre>
+<h4>#6 docs/architecture/ARCHITECTURE.md</h4><pre class="mermaid">flowchart LR
+    GH["GitHub App"] --&gt; App["Application"]
+    Web["Web UI"] --&gt; App
+    App --&gt; Domain
+</pre>
+<h4>#7 docs/architecture/ARCHITECTURE.md</h4><pre class="mermaid">flowchart TD
+    AG["Architecture Graph"] --&gt; HB["Historical Baselines"]
+    HB --&gt; DD["Drift Detection"]
+    DD --&gt; Gov["Governance"]
+</pre>
+<h4>#8 docs/MULTI-TENANCY-AUDIT.md</h4><pre class="mermaid">flowchart TD
+    User["User (Auth)&lt;br/&gt;id, email, passHash"] --&gt;|"1 : 1 (Owner)"| Org["Organization&lt;br/&gt;id, name, ownerId,&lt;br/&gt;plan, stripeCustId"]
+    Org --&gt;|"1 : N"| Project["Project&lt;br/&gt;id, organizationId,&lt;br/&gt;name, repository"]
+    Project --&gt;|"1 : N"| Job["AnalysisJob&lt;br/&gt;id, projectId, orgId,&lt;br/&gt;status, branch, progress"]
+    Project --&gt;|"1 : N"| Review["Review&lt;br/&gt;id, projectId, orgId,&lt;br/&gt;score, gate, findings[]"]
+</pre>
+<h4>#9 docs/TEST-QUALITY-AUDIT.md</h4><pre class="mermaid">flowchart TD
+    E2E["E2E Tests (1 test)&lt;br/&gt;Real remote repo clone,&lt;br/&gt;akitaonrails/ai-memory"] --&gt; Int["Integration Tests (52 tests)&lt;br/&gt;API Server, GitHub PR&lt;br/&gt;Governance, Cloner, Queue"]
+    Int --&gt; Unit["Unit Tests (39 tests)&lt;br/&gt;AST Analyzer, Graph,&lt;br/&gt;Diff Hunks, Auth, Gate"]
+</pre>
+<h4>#10 docs/RELIABILITY-AUDIT.md</h4><pre class="mermaid">flowchart TD
+    Client["Client POST /analyses"] --&gt;|"HTTP 202 Accepted { id, status: 'queued' }"| Enqueue["AnalysisQueue.enqueue()"]
+    Enqueue --&gt; W1["Active Worker 1&lt;br/&gt;(Cloning / Analyzing)"]
+    Enqueue --&gt; W2["Active Worker 2&lt;br/&gt;(Cloning / Analyzing)"]
+    W1 --&gt; Next["processNext() Backlog"]
+    W2 --&gt; Next
+</pre>
+<h4>#11 docs/QG-UX-001-AI-REMEDIATION.md</h4><pre class="mermaid">flowchart TD
+    FE["Frontend: Finding Detail Drawer"] --&gt;|"POST /api/findings/:id/explain&lt;br/&gt;(or /api/projects/:id/findings/:findingId/remediate)"| Pool["Fastify API Worker Pool"]
+    Pool --&gt; S1["Loads Finding AST Context &amp; Source File Hunk from workspace/cache"]
+    S1 --&gt; S2["Builds Context-Rich Prompt (@qualityguard/ai)"]
+    S2 --&gt; S3["Invokes AI Provider (DeepSeek / OpenAI / Anthropic)"]
+    S3 --&gt; S4["Streams SSE or returns structured JSON"]
+</pre>
+<h4>#12 docs/QG-OPS-001-AUDIT.md</h4><pre class="mermaid">flowchart TD
+    WAN["Internet (WAN)"] --&gt;|"HTTPS (443) / HTTP (80)"| Caddy["Caddy 2 Reverse Proxy (caddy:2-alpine)&lt;br/&gt;- Automatic TLS Certificate&lt;br/&gt;- Security Headers (HSTS)"]
+    Caddy --&gt;|"/api/*, /webhooks/*, /health, /ready"| API["QualityGuard API Service&lt;br/&gt;- Sandboxed Repository Cloner&lt;br/&gt;- Analysis Queue (FIFO)&lt;br/&gt;- GitHub PR Governance Engine&lt;br/&gt;- Webhook HMAC-SHA256 Validator"]
+    Caddy --&gt;|"/* (Web UI)"| Web["Next.js 16 Standalone Web UI&lt;br/&gt;- Dynamic Dashboard&lt;br/&gt;- Interactive Graph Explorer&lt;br/&gt;- Real-Time Analysis Polling"]
+    API --&gt;|"Internal DB Queries"| PG["PostgreSQL 16 (Alpine)&lt;br/&gt;- Volume: qualityguard_pg&lt;br/&gt;- Tables: users, orgs, projects,&lt;br/&gt;reviews, usage, audit, events"]
+    Web --&gt;|"Internal API Proxy&lt;br/&gt;(API_URL=http://api:8787)"| API
+</pre>
+<h4>#13 docs/QG-OPS-001-DEPLOYMENT.md</h4><pre class="mermaid">flowchart TD
+    WAN["Internet (WAN)"] --&gt;|"HTTP (80) / HTTPS (443) / HTTP/3 (UDP 443)"| Caddy["Caddy 2 Reverse Proxy&lt;br/&gt;- Automatic Let's Encrypt&lt;br/&gt;- Strict Security Headers"]
+    Caddy --&gt;|"/api/*, /webhooks/*, /health, /ready"| API["QualityGuard Fastify API&lt;br/&gt;- Sandboxed Repository Cloner (Git CLI)&lt;br/&gt;- Analysis Queue (FIFO Worker Pool)&lt;br/&gt;- GitHub PR Governance &amp; Review Engine&lt;br/&gt;- Webhook HMAC-SHA256 Idempotent Handler"]
+    Caddy --&gt;|"/* (Web Frontend)"| Web["Next.js 16 Standalone Web&lt;br/&gt;- SSR &amp; Server Components&lt;br/&gt;- Real-Time Analysis Polling&lt;br/&gt;- Architecture Explorer Graph"]
+    API --&gt;|"PostgreSQL Wire Protocol"| PG["PostgreSQL 16 Database&lt;br/&gt;- Named Volume: qualityguard_pg&lt;br/&gt;- Automatic schema migrations on boot"]
+    Web --&gt;|"Internal API Proxy&lt;br/&gt;(API_URL=http://api:8787)"| API
+</pre>
+<h4>#14 docs/QG-OPS-001-GITHUB-E2E.md</h4><pre class="mermaid">flowchart TD
+    GH["GitHub Enterprise / github.com"] --&gt;|"1. PR Opened / Synchronize / Reopened&lt;br/&gt;POST https://qualityguard.gfcode.com.br/api/webhooks/github"| Caddy["Caddy 2 Reverse Proxy (TLS)"]
+    Caddy --&gt;|"Proxies raw body + headers"| Ingress["Fastify Ingress Server (apps/api/src/server.ts)&lt;br/&gt;1. HMAC-SHA256 Verification: crypto.timingSafeEqual(headerSig, computedHmac)&lt;br/&gt;2. Idempotency Gate: checks X-GitHub-Delivery against in-flight &amp; processed cache&lt;br/&gt;3. Quick ACK: returns HTTP 202 Accepted (&amp;lt;25ms)&lt;br/&gt;4. Queue Dispatch: enqueues background PR review job"]
+    Ingress --&gt; Gov["PR Governance Engine (integrations/github/src/governance.ts)&lt;br/&gt;1. Fetch PR Diff &amp; Modified Hunks via Octokit&lt;br/&gt;2. Build Unified Diff Position Map (diff-mapping.ts)&lt;br/&gt;3. Run Rule Engine (Circular dependencies, security vulnerabilities, dead code)&lt;br/&gt;4. Map Findings to Diff Ranges (single-line or multi-line inline comments)&lt;br/&gt;5. Publish GitHub Check Run (conclusion: 'success' | 'failure')&lt;br/&gt;6. Post GitHub PR Review (REQUEST_CHANGES | COMMENT | APPROVE) with inline comments"]
+</pre>
+<h4>#15 docs/QG-OPS-001-PERFORMANCE.md</h4><pre class="mermaid">gantt
+    title E2E Analysis Pipeline — Total 5,850 ms
+    dateFormat x
+    axisFormat %L ms
+    section Pipeline
+    Git Sandboxed Clone (depth 1, no-tags) — 4,120 ms :done, clone, 0, 4120
+    AST Analysis &amp; Architecture Map — 1,430 ms        :active, ast, after clone, 1430
+    DB Persistence — 38 ms                            :db, after ast, 38
+</pre>
+<h4>#16 docs/QG-TDD-002-IMPLEMENTATION-REPORT.md</h4><pre class="mermaid">flowchart TD
+    A["Untrusted Input"] --&gt; B["validateRepositoryUrl() &amp; validateBranch()"]
+    B --&gt; C["mkdir(/tmp/qualityguard/workspaces/job-&amp;lt;uuid&amp;gt;)"]
+    C --&gt; D["spawn('git', ['-c', 'protocol.file.allow=never',&lt;br/&gt;'-c', 'submodule.recurse=false',&lt;br/&gt;'clone', '--depth', '1', '--no-tags',&lt;br/&gt;'--recurse-submodules=no', '--', url, targetPath])"]
+    D --&gt; E["Timeout Controller (45s)"]
+    E --&gt; F["calculateDirectorySize() (&amp;lt;= 50MB)"]
+    F --&gt; G["git rev-parse HEAD (commitSha)"]
+    G --&gt; H["ClonedWorkspace Object&lt;br/&gt;{ path, commitSha, sizeBytes, cleanup() }"]
+</pre>
+<h4>#17 docs/QG-UX-001-IMPLEMENTATION-REPORT.md</h4><pre class="mermaid">flowchart TD
+    L1["1. HEADER: Project context, commit SHA badge, real-time action triggers"]
+    L2["2. QUALITY SUMMARY: Quality Score, Quality Gate status card, Severity counts"]
+    L3["3. TOP PRIORITIES: Top 5 urgent blockers sorted deterministically"]
+    L4["4. FILTER BAR: Search, Severity pills, Category, Rule, File &amp; Group By"]
+    L5["5. FINDINGS LIST &amp; GROUPED SECTIONS: Expandable items with code evidence"]
+    L6["6. INSPECTION DRAWER: Detailed slide-out panel with GitHub link &amp; copy JSON"]
+    L1 --&gt; L2 --&gt; L3 --&gt; L4 --&gt; L5 --&gt; L6
+</pre>
+<h4>#18 docs/QG-VALIDATION-001-PRODUCT-E2E.md</h4><pre class="mermaid">flowchart TD
+    A["POST /projects/:id/analyses → 202 Accepted&lt;br/&gt;{ status: 'queued', progress: 0 }"] --&gt;|"Queue Worker Polling"| B["State: 'cloning' (progress: 20%)"]
+    B --&gt;|"Sandboxed Shallow Git Clone"| C["State: 'analyzing' (progress: 50%)"]
+    C --&gt;|"Multi-Language AST + Manifest Extractors + Architecture Engine"| D["State: 'completed' (progress: 100%)&lt;br/&gt;→ Review Persisted in PostgreSQL"]
+</pre>
+<h4>#19 docs/RELEASE-READINESS-AUDIT.md</h4><pre class="mermaid">flowchart TD
+    Ext["External World"] --&gt; GH["GitHub Webhooks&lt;br/&gt;(POST /webhooks/github)"]
+    Ext --&gt; Web["Web UI / REST Clients&lt;br/&gt;(POST /projects/:id/analyses)"]
+    GH --&gt; HMAC["HMAC-SHA256 Signature&lt;br/&gt;&amp; Delivery Idempotency"]
+    Web --&gt; JWT["JWT Token Authentication&lt;br/&gt;&amp; Tenant Ownership Check"]
+    HMAC --&gt; Check1["Check Run: 'in_progress'&lt;br/&gt;&amp; PR Diff Extraction"]
+    JWT --&gt; Enqueue["AnalysisQueue.enqueue()&lt;br/&gt;State: 'queued' (HTTP 202)"]
+    Check1 --&gt; Pool["AnalysisQueue Worker Pool&lt;br/&gt;(FIFO, Concurrency Limit)"]
+    Enqueue --&gt; Pool
+    Pool --&gt; Cloner["SandboxedRepositoryCloner&lt;br/&gt;- 45s Hard SIGKILL Timeout&lt;br/&gt;- 50MB Disk Quota Enforcement&lt;br/&gt;- Submodules Disabled&lt;br/&gt;- Isolated Temp Workspace"]
+    Cloner --&gt; Engine["QualityGuard Analysis Engine&lt;br/&gt;1. Deterministic AST Rules&lt;br/&gt;2. Architecture Dependency &amp; Cycle/Drift Graph&lt;br/&gt;3. Manifest Dependency Parser&lt;br/&gt;4. Quality Gate Evaluation&lt;br/&gt;5. Category Score Aggregation"]
+    Engine --&gt; Cleanup["Workspace Cleanup (finally)"]
+    Cleanup --&gt; Done1["Check Run: 'completed'&lt;br/&gt;+ Inline PR Comments &amp;&lt;br/&gt;Summary Review Body"]
+    Cleanup --&gt; Done2["State: 'completed' (100%)&lt;br/&gt;Persisted to Postgres /&lt;br/&gt;Memory Store"]
+</pre>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<script>
+window.__errs=[];
+mermaid.initialize({startOnLoad:false});
+(async()=>{
+ const nodes=[...document.querySelectorAll('pre.mermaid')];
+ for(let i=0;i<nodes.length;i++){
+   const code=nodes[i].textContent;
+   try{ await mermaid.parse(code); }
+   catch(e){ window.__errs.push({i, msg:String(e.message||e).split("\n")[0]}); }
+ }
+ document.title='DONE:'+window.__errs.length;
+ const d=document.createElement('div'); d.id='result'; d.textContent=JSON.stringify(window.__errs); document.body.appendChild(d);
+})();
+</script></body></html>

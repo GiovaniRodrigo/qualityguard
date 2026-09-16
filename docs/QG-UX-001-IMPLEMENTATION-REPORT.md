@@ -45,20 +45,15 @@ Previously, the Findings view in QualityGuard was a rudimentary, flat list of de
 
 The Findings view has been transformed into a mission-control command center structured into 6 visual layers:
 
-```
-┌──────────────────────────────────────────────────────────────────────────────┐
-│ 1. HEADER: Project context, commit SHA badge, real-time action triggers     │
-├──────────────────────────────────────────────────────────────────────────────┤
-│ 2. QUALITY SUMMARY: Quality Score, Quality Gate status card, Severity counts │
-├──────────────────────────────────────────────────────────────────────────────┤
-│ 3. TOP PRIORITIES: Top 5 urgent blockers sorted deterministically            │
-├──────────────────────────────────────────────────────────────────────────────┤
-│ 4. FILTER BAR: Search, Severity pills, Category, Rule, File & Group By       │
-├──────────────────────────────────────────────────────────────────────────────┤
-│ 5. FINDINGS LIST & GROUPED SECTIONS: Expandable items with code evidence     │
-├──────────────────────────────────────────────────────────────────────────────┤
-│ 6. INSPECTION DRAWER: Detailed slide-out panel with GitHub link & copy JSON  │
-└──────────────────────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    L1["1. HEADER: Project context, commit SHA badge, real-time action triggers"]
+    L2["2. QUALITY SUMMARY: Quality Score, Quality Gate status card, Severity counts"]
+    L3["3. TOP PRIORITIES: Top 5 urgent blockers sorted deterministically"]
+    L4["4. FILTER BAR: Search, Severity pills, Category, Rule, File & Group By"]
+    L5["5. FINDINGS LIST & GROUPED SECTIONS: Expandable items with code evidence"]
+    L6["6. INSPECTION DRAWER: Detailed slide-out panel with GitHub link & copy JSON"]
+    L1 --> L2 --> L3 --> L4 --> L5 --> L6
 ```
 
 ---

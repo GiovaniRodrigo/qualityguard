@@ -12,35 +12,13 @@
 
 QualityGuard runs in production as a containerized stack orchestrated via Docker Compose (`docker-compose.production.yml`). All services communicate over an isolated internal Docker bridge network (`backend`), ensuring zero WAN exposure for databases and internal API services.
 
-```
-                                [ Internet (WAN) ]
-                                        │
-                                        │ HTTP (80) / HTTPS (443) / HTTP/3 (UDP 443)
-                                        ▼
-                         ┌─────────────────────────────┐
-                         │   Caddy 2 Reverse Proxy     │
-                         │   - Automatic Let's Encrypt │
-                         │   - Strict Security Headers │
-                         └──────────────┬──────────────┘
-                                        │
-             ┌──────────────────────────┴──────────────────────────┐
-             │                                                     │
-             ▼ /api/*, /webhooks/*, /health, /ready                ▼ /* (Web Frontend)
-┌───────────────────────────────────────────┐         ┌─────────────────────────────────┐
-│         QualityGuard Fastify API          │         │     Next.js 16 Standalone Web   │
-│  - Sandboxed Repository Cloner (Git CLI)  │         │  - SSR & Server Components      │
-│  - Analysis Queue (FIFO Worker Pool)      │         │  - Real-Time Analysis Polling   │
-│  - GitHub PR Governance & Review Engine   │         │  - Architecture Explorer Graph  │
-│  - Webhook HMAC-SHA256 Idempotent Handler │         └────────────────┬────────────────┘
-└─────────────────────┬─────────────────────┘                          │
-                      │                                                │ Internal API Proxy
-                      │ PostgreSQL Wire Protocol                       │ (API_URL=http://api:8787)
-                      ▼                                                │
-┌───────────────────────────────────────────┐                          │
-│           PostgreSQL 16 Database          │◄─────────────────────────┘
-│  - Named Volume: qualityguard_pg          │
-│  - Automatic schema migrations on boot    │
-└───────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    WAN["Internet (WAN)"] -->|"HTTP (80) / HTTPS (443) / HTTP/3 (UDP 443)"| Caddy["Caddy 2 Reverse Proxy<br/>- Automatic Let's Encrypt<br/>- Strict Security Headers"]
+    Caddy -->|"/api/*, /webhooks/*, /health, /ready"| API["QualityGuard Fastify API<br/>- Sandboxed Repository Cloner (Git CLI)<br/>- Analysis Queue (FIFO Worker Pool)<br/>- GitHub PR Governance & Review Engine<br/>- Webhook HMAC-SHA256 Idempotent Handler"]
+    Caddy -->|"/* (Web Frontend)"| Web["Next.js 16 Standalone Web<br/>- SSR & Server Components<br/>- Real-Time Analysis Polling<br/>- Architecture Explorer Graph"]
+    API -->|"PostgreSQL Wire Protocol"| PG["PostgreSQL 16 Database<br/>- Named Volume: qualityguard_pg<br/>- Automatic schema migrations on boot"]
+    Web -->|"Internal API Proxy<br/>(API_URL=http://api:8787)"| API
 ```
 
 ### Port Matrix & Security Boundaries

@@ -19,22 +19,24 @@ In accordance with QualityGuard product rules:
 
 When the interactive AI Remediation API is scheduled for implementation in a future milestone, it will follow this contract:
 
+```mermaid
+flowchart TD
+    FE["Frontend: Finding Detail Drawer"] -->|"POST /api/findings/:id/explain<br/>(or /api/projects/:id/findings/:findingId/remediate)"| Pool["Fastify API Worker Pool"]
+    Pool --> S1["Loads Finding AST Context & Source File Hunk from workspace/cache"]
+    S1 --> S2["Builds Context-Rich Prompt (@qualityguard/ai)"]
+    S2 --> S3["Invokes AI Provider (DeepSeek / OpenAI / Anthropic)"]
+    S3 --> S4["Streams SSE or returns structured JSON"]
 ```
-[ Frontend: Finding Detail Drawer ]
-                │
-                │ POST /api/findings/:id/explain (or /api/projects/:id/findings/:findingId/remediate)
-                ▼
-[ Fastify API Worker Pool ]
-  - Loads Finding AST Context & Source File Hunk from workspace/cache
-  - Builds Context-Rich Prompt (@qualityguard/ai)
-  - Invokes AI Provider (DeepSeek / OpenAI / Anthropic)
-  - Streams SSE (Server-Sent Events) or returns structured JSON:
-    {
-      "explanation": "Markdown description of why this pattern is dangerous...",
-      "codeDiff": "--- a/src/api/users.ts\n+++ b/src/api/users.ts\n...",
-      "confidence": 0.94,
-      "securityConsiderations": [...]
-    }
+
+The worker returns a structured JSON payload:
+
+```json
+{
+  "explanation": "Markdown description of why this pattern is dangerous...",
+  "codeDiff": "--- a/src/api/users.ts\n+++ b/src/api/users.ts\n...",
+  "confidence": 0.94,
+  "securityConsiderations": ["..."]
+}
 ```
 
 ---

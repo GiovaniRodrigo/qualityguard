@@ -26,24 +26,15 @@ O repositório e os parâmetros de entrada (`repository`, `branch`) são tratado
 
 O componente `SandboxedRepositoryCloner` foi encapsulado em [`apps/api/src/cloner.ts`](file:///home/isabelle/teste_qualityguard/qualityguard/apps/api/src/cloner.ts):
 
-```
-Untrusted Input ➔ validateRepositoryUrl() & validateBranch()
-                       ↓
-         mkdir(/tmp/qualityguard/workspaces/job-<uuid>)
-                       ↓
-     spawn('git', ['-c', 'protocol.file.allow=never',
-                   '-c', 'submodule.recurse=false',
-                   'clone', '--depth', '1', '--no-tags',
-                   '--recurse-submodules=no', '--', url, targetPath])
-                       ↓
-              Timeout Controller (45s)
-                       ↓
-          calculateDirectorySize() (<= 50MB)
-                       ↓
-          git rev-parse HEAD (commitSha)
-                       ↓
-              ClonedWorkspace Object
-             { path, commitSha, sizeBytes, cleanup() }
+```mermaid
+flowchart TD
+    A["Untrusted Input"] --> B["validateRepositoryUrl() & validateBranch()"]
+    B --> C["mkdir(/tmp/qualityguard/workspaces/job-&lt;uuid&gt;)"]
+    C --> D["spawn('git', ['-c', 'protocol.file.allow=never',<br/>'-c', 'submodule.recurse=false',<br/>'clone', '--depth', '1', '--no-tags',<br/>'--recurse-submodules=no', '--', url, targetPath])"]
+    D --> E["Timeout Controller (45s)"]
+    E --> F["calculateDirectorySize() (&lt;= 50MB)"]
+    F --> G["git rev-parse HEAD (commitSha)"]
+    G --> H["ClonedWorkspace Object<br/>{ path, commitSha, sizeBytes, cleanup() }"]
 ```
 
 ---

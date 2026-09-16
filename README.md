@@ -14,53 +14,36 @@ QualityGuard combines deterministic analysis, architecture intelligence and opti
 
 ## Architecture & Production Flow
 
-```text
-Developer ──( git push main )──► GitHub Actions CI (Typecheck / Test / Build)
-                                         │
-                                   [ CI Passes ]
-                                         │
-                                         ▼
-                                GitHub Actions CD (SSH)
-                                         │
-                                         ▼
-                                 VPS 203.0.113.10
-                                         │
-                                         ├── /opt/qualityguard (.env.production)
-                                         │
-                                         ▼
-                                  Docker Compose
-            ┌────────────────────────────┼────────────────────────────┐
-            ▼                            ▼                            ▼
-      Caddy (HTTPS :443)          Web (Next.js :3000)         API (Node.js :8787)
-  [qualityguard.example.com]           │                            │
-                                         └─────────────┬──────────────┘
-                                                       │
-                                        ┌──────────────┴──────────────┐
-                                        ▼                             ▼
-                               PostgreSQL 16 (:5432)            Redis 7 (:6379)
-                                (qualityguard_pg)             (qualityguard_redis)
+```mermaid
+flowchart TD
+    Dev["Developer — git push main"] --> CI["GitHub Actions CI<br/>Typecheck / Test / Build"]
+    CI --> Pass{{CI Passes}}
+    Pass --> CD["GitHub Actions CD (SSH)"]
+    CD --> VPS["VPS 203.0.113.10"]
+    VPS --> Env["/opt/qualityguard<br/>(.env.production)"]
+    Env --> Compose["Docker Compose"]
+    Compose --> Caddy["Caddy — HTTPS :443<br/>qualityguard.example.com"]
+    Compose --> Web["Web — Next.js :3000"]
+    Compose --> API["API — Node.js :8787"]
+    Web --> PG["PostgreSQL 16 :5432<br/>(qualityguard_pg)"]
+    API --> PG
+    Web --> Redis["Redis 7 :6379<br/>(qualityguard_redis)"]
+    API --> Redis
 ```
 
 ---
 
 ## Implemented Product Path
 
-```text
-CLI / GitHub PR
-      ↓
-Diff + repository context
-      ↓
-Deterministic rules ──→ baseline + deduplication
-      ↓
-AST + dependency graph ──→ architecture drift
-      ↓
-Optional AI providers ──→ strict schema validation
-      ↓
-Findings → score → Quality Gate
-      ↓
-GitHub Check / dashboard
-      ↓
-Organization → usage metering → Stripe subscription
+```mermaid
+flowchart TD
+    A["CLI / GitHub PR"] --> B["Diff + repository context"]
+    B --> C["Deterministic rules → baseline + deduplication"]
+    C --> D["AST + dependency graph → architecture drift"]
+    D --> E["Optional AI providers → strict schema validation"]
+    E --> F["Findings → score → Quality Gate"]
+    F --> G["GitHub Check / dashboard"]
+    G --> H["Organization → usage metering → Stripe subscription"]
 ```
 
 ---

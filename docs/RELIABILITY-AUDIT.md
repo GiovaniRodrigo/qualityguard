@@ -15,28 +15,13 @@
 - **State Polling:** Clients poll `GET /analyses/:id` to receive real-time status transitions:
   `queued` (0%) ➔ `cloning` (20%) ➔ `analyzing` (70%) ➔ `completed` (100%) or `failed`.
 
-```
-                    ┌─────────────────────────┐
-                    │ Client POST /analyses   │
-                    └────────────┬────────────┘
-                                 │ HTTP 202 Accepted { id, status: 'queued' }
-                                 ▼
-                    ┌─────────────────────────┐
-                    │ AnalysisQueue.enqueue() │
-                    └────────────┬────────────┘
-                                 │
-                 ┌───────────────┴───────────────┐
-                 ▼                               ▼
-    ┌─────────────────────────┐     ┌─────────────────────────┐
-    │     Active Worker 1     │     │     Active Worker 2     │
-    │   (Cloning / Analyzing) │     │   (Cloning / Analyzing) │
-    └────────────┬────────────┘     └────────────┬────────────┘
-                 │                               │
-                 └───────────────┬───────────────┘
-                                 ▼
-                    ┌─────────────────────────┐
-                    │  processNext() Backlog  │
-                    └─────────────────────────┘
+```mermaid
+flowchart TD
+    Client["Client POST /analyses"] -->|"HTTP 202 Accepted { id, status: 'queued' }"| Enqueue["AnalysisQueue.enqueue()"]
+    Enqueue --> W1["Active Worker 1<br/>(Cloning / Analyzing)"]
+    Enqueue --> W2["Active Worker 2<br/>(Cloning / Analyzing)"]
+    W1 --> Next["processNext() Backlog"]
+    W2 --> Next
 ```
 
 ---
