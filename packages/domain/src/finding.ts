@@ -23,17 +23,19 @@ export interface Finding {
   status: FindingStatus;
   decision: ReviewDecision;
   file: string;
-  line?: number;
+  line?: number | undefined;
+  startLine?: number | undefined;
+  endLine?: number | undefined;
   title: string;
   description: string;
   suggestion: string;
   confidence: number;
   source: FindingSource;
-  ruleId?: string;
-  body?: string;
-  rationale?: string;
-  impact?: string;
-  evidence?: string[];
+  ruleId?: string | undefined;
+  body?: string | undefined;
+  rationale?: string | undefined;
+  impact?: string | undefined;
+  evidence?: string[] | undefined;
 }
 
 export interface ReviewResult {

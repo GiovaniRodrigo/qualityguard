@@ -1,0 +1,45 @@
+# Gitleaks configuration for QualityGuard
+#
+# QualityGuard is itself a code-quality / secret-detection tool, so its test
+# suites and AI remediation examples deliberately embed FAKE secrets to exercise
+# the detection rules. This config keeps the full default ruleset active on ALL
+# files (no path is excluded) and allowlists ONLY the specific, known-fake
+# literal values below. Any other secret — including a real one in a test file,
+# a doc, or a fixture — is still detected.
+#
+# Scope policy: value-specific regexes only. Do NOT add broad `paths`
+# exclusions (e.g. docs/**, *.test.*) — those would hide real secrets. Every
+# entry here must be an obviously-fake, well-known placeholder string. If a new
+# fixture needs allowlisting, add its exact literal value, not a path.
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Known fake/placeholder secrets used in tests, docs, and AI examples"
+# Match each allowlisted value against the captured secret itself.
+regexTarget = "secret"
+regexes = [
+  # CI-only placeholder for validating the production compose file (docker.yml)
+  '''ci-secret-placeholder-min-32-characters''',
+  # Documentation placeholder for a generated JWT secret
+  '''GENERATED_64_CHAR_HEX_SECRET_FOR_JWT''',
+  # Placeholder token in a curl example (Portuguese: "your GitHub token")
+  '''SEU_GITHUB_TOKEN''',
+  # Truncated JWT shown in smoke-test runbooks (ends in literal "...")
+  '''eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\.\.\.''',
+  # Fake JWT fixture in packages/ai/src/ai.test.ts
+  '''eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\.eyJzdWIiOiIxMjM0NTY3ODkwIn0\.doNotLeakThisSignaturePart123''',
+  # Malformed fake JWT fixture in packages/analyzer/src/comparison.test.ts
+  '''eyJhGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9''',
+  # Fake OpenAI-style keys in tests and the AI remediation "Before" example
+  '''sk-proj-1234567890abcdef1234567890abcdef''',
+  '''sk-live-1234567890abcdef''',
+  '''sk-1234567890123456789012345''',
+  # Fake GitHub PAT fixture in packages/ai/src/ai.test.ts (redaction test)
+  '''ghp_123456789012345678901234567890123456''',
+  # Fake generic key fixture in packages/analyzer/src/rules.test.ts
+  '''123456789abcdef''',
+  # Canonical AWS documentation example access key
+  '''AKIAIOSFODNN7EXAMPLE''',
+]

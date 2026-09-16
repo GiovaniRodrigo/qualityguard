@@ -1,0 +1,98 @@
+name: Security
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: "0 6 * * 1" # Weekly, Monday 06:00 UTC
+
+permissions:
+  contents: read
+
+jobs:
+  # CodeQL code scanning (free on public repositories).
+  codeql:
+    name: CodeQL
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      actions: read
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        language: ["javascript-typescript"]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+
+  # Dependency review (free on public repositories); runs on pull requests only.
+  dependency-review:
+    name: Dependency review
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/dependency-review-action@v4
+        with:
+          # Block PRs that introduce a high-severity (or worse) vulnerable dependency.
+          fail-on-severity: high
+          # Note: `deny-licenses` is intentionally NOT set. It makes the action
+          # fail on any transitive dependency whose license GitHub cannot detect
+          # (common, and unrelated to AGPL compatibility). License compatibility
+          # is instead ensured by policy — all runtime deps are permissive
+          # (MIT/ISC/Apache/BSD), verified before release — and re-checked on
+          # dependency bumps via Dependabot.
+          comment-summary-in-pr: on-failure
+
+  secret-scan:
+    name: Secret scan
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read # gitleaks-action lists PR commits on pull_request events
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # Guards against the gitleaks allowlist degrading into "allow everything":
+  # asserts a non-allowlisted canary secret is still detected by the repo config.
+  gitleaks-selftest:
+    name: Gitleaks config self-test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Assert gitleaks still detects a non-allowlisted secret
+        run: ./scripts/gitleaks-selftest.sh
+
+  audit:
+    name: pnpm audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.15.0
+          run_install: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: "pnpm"
+      - run: pnpm install --frozen-lockfile
+      - name: Audit production dependencies
+        run: pnpm audit --prod --audit-level high
+        continue-on-error: true

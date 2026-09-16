@@ -1,6 +1,6 @@
 # QualityGuard — Operations & Runbook Guide
 
-This guide describes operational routines, health monitoring, log inspection, service maintenance, and troubleshooting for the QualityGuard production stack running on VPS `2.25.92.154` (`qualityguard.gfcode.com.br`).
+This guide describes operational routines, health monitoring, log inspection, service maintenance, and troubleshooting for the QualityGuard production stack running on VPS `203.0.113.10` (`qualityguard.example.com`).
 
 ---
 
@@ -93,7 +93,7 @@ bash deploy/smoke-test.sh
 ```
 
 Smoke tests validate:
-- DNS resolution of `qualityguard.gfcode.com.br` to `2.25.92.154`
+- DNS resolution of `qualityguard.example.com` to `203.0.113.10`
 - HTTPS/TLS handshake and response codes
 - Next.js Web frontend (HTTP 200)
 - API `/api/health` and `/api/ready`

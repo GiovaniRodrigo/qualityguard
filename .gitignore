@@ -1,6 +1,11 @@
 node_modules/
 dist/
 coverage/
+# ...but never ignore source or test-fixture directories named "coverage"
+!**/src/coverage/
+!**/src/coverage/**
+!fixtures/coverage/
+!fixtures/coverage/**
 .turbo/
 .next/
 *.tsbuildinfo
@@ -9,4 +14,12 @@ coverage/
 .env.*
 !.env.example
 !.env.production.example
+*.pem
+*.key
+*.cert
+*.crt
+secrets/
 
+
+# Local scratch / ad-hoc verification scripts
+scratch/
