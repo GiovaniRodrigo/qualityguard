@@ -68,6 +68,16 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+  # Guards against the gitleaks allowlist degrading into "allow everything":
+  # asserts a non-allowlisted canary secret is still detected by the repo config.
+  gitleaks-selftest:
+    name: Gitleaks config self-test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Assert gitleaks still detects a non-allowlisted secret
+        run: ./scripts/gitleaks-selftest.sh
+
   audit:
     name: pnpm audit
     runs-on: ubuntu-latest

@@ -57,7 +57,7 @@ To activate live GitHub App governance in production:
 3. Set the following environment variables in `.env` or Docker environment:
    ```env
    GITHUB_APP_ID=123456
-   GITHUB_APP_PRIVATE_KEY="-----BEGIN RSA PRIVATE KEY-----\n..."
+   GITHUB_APP_PRIVATE_KEY="<your PEM private key>"
    GITHUB_WEBHOOK_SECRET="your-secure-webhook-secret"
    ```
 4. Subscribe the GitHub App to:

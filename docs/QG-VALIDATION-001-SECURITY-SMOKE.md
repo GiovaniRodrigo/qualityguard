@@ -80,7 +80,7 @@ Before AI remediation streaming begins, `buildRemediationPrompt` executes automa
 - GitHub Personal Access Tokens (`ghp_`, `gho_`, `github_pat_`)
 - OpenAI API Keys (`sk-[a-zA-Z0-9]{20,}`)
 - AWS Access Key IDs (`AKIA[0-9A-Z]{16}`)
-- Generic Private Keys (`-----BEGIN RSA PRIVATE KEY-----`)
+- Generic Private Keys (`PEM private key (BEGIN/END markers)`)
 - Bearer tokens and JWTs
 
 Any match is replaced with `[REDACTED_SECRET]` before transmission to the AI provider, preventing accidental credential exfiltration via prompt leakage.
