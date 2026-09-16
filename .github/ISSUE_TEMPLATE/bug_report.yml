@@ -1,0 +1,70 @@
+name: Bug report
+description: Report a problem so we can fix it
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to file a bug report! Please do **not** include
+        secrets, tokens, or real credentials in this report.
+  - type: textarea
+    id: description
+    attributes:
+      label: Describe the bug
+      description: A clear and concise description of what the bug is.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      description: How can we reproduce the behavior?
+      placeholder: |
+        1. Run '...'
+        2. With config '...'
+        3. See error
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: What did you expect to happen?
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior / logs
+      description: What actually happened? Paste relevant logs (redact secrets).
+      render: shell
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      options:
+        - analyzer
+        - architecture
+        - ai
+        - api
+        - web
+        - cli
+        - github integration
+        - docs / other
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version / commit
+      description: QualityGuard version or git commit SHA.
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: OS, Node version, Docker version if relevant.
+      placeholder: "e.g. Ubuntu 24.04, Node 22.5, Docker 27"
+    validations:
+      required: true

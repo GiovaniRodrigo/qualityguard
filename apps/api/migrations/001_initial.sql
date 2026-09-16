@@ -8,6 +8,9 @@ CREATE TABLE IF NOT EXISTS usage_events (id UUID PRIMARY KEY, organization_id UU
 CREATE TABLE IF NOT EXISTS audit_events (id UUID PRIMARY KEY, organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE, actor_id UUID REFERENCES users(id), action TEXT NOT NULL, resource TEXT NOT NULL, metadata JSONB NOT NULL DEFAULT '{}', created_at TIMESTAMPTZ NOT NULL DEFAULT now());
 CREATE TABLE IF NOT EXISTS team_policies (id UUID PRIMARY KEY, organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE, name TEXT NOT NULL, minimum_score INTEGER NOT NULL DEFAULT 80, block_on TEXT[] NOT NULL DEFAULT ARRAY['critical','high'], require_ai_review BOOLEAN NOT NULL DEFAULT false, created_at TIMESTAMPTZ NOT NULL DEFAULT now());
 CREATE TABLE IF NOT EXISTS stripe_events (id TEXT PRIMARY KEY, event_type TEXT NOT NULL, received_at TIMESTAMPTZ NOT NULL DEFAULT now());
+CREATE TABLE IF NOT EXISTS architecture_rules (id UUID PRIMARY KEY, project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE, organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE, name TEXT NOT NULL, description TEXT, enabled BOOLEAN NOT NULL DEFAULT true, severity TEXT NOT NULL DEFAULT 'high', type TEXT NOT NULL, config JSONB NOT NULL DEFAULT '{}', created_at TIMESTAMPTZ NOT NULL DEFAULT now(), updated_at TIMESTAMPTZ NOT NULL DEFAULT now());
 CREATE INDEX IF NOT EXISTS reviews_project_created_idx ON reviews(project_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS usage_org_created_idx ON usage_events(organization_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS audit_org_created_idx ON audit_events(organization_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS architecture_rules_project_idx ON architecture_rules(project_id, enabled);
+CREATE INDEX IF NOT EXISTS architecture_rules_org_idx ON architecture_rules(organization_id);

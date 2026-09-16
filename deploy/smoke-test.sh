@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-DOMAIN="${DOMAIN:-qualityguard.gfcode.com.br}"
+DOMAIN="${DOMAIN:-qualityguard.example.com}"
 BASE_URL="${BASE_URL:-https://${DOMAIN}}"
-EXPECTED_IP="${EXPECTED_IP:-2.25.92.154}"
+EXPECTED_IP="${EXPECTED_IP:-203.0.113.10}"
 APP_DIR="${APP_DIR:-/opt/qualityguard}"
 
 echo "=========================================="

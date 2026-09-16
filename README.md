@@ -1,7 +1,8 @@
 # QualityGuard
 
 [![CI](https://github.com/GiovaniRodrigo/qualityguard/actions/workflows/ci.yml/badge.svg)](https://github.com/GiovaniRodrigo/qualityguard/actions/workflows/ci.yml)
-[![Deploy Production](https://github.com/GiovaniRodrigo/qualityguard/actions/workflows/deploy-production.yml/badge.svg)](https://github.com/GiovaniRodrigo/qualityguard/actions/workflows/deploy-production.yml)
+[![Security](https://github.com/GiovaniRodrigo/qualityguard/actions/workflows/security.yml/badge.svg)](https://github.com/GiovaniRodrigo/qualityguard/actions/workflows/security.yml)
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](./LICENSE)
 
 > AI-powered software quality and architecture governance for teams shipping code with AI.
 
@@ -22,7 +23,7 @@ Developer ──( git push main )──► GitHub Actions CI (Typecheck / Test /
                                 GitHub Actions CD (SSH)
                                          │
                                          ▼
-                                 VPS 2.25.92.154
+                                 VPS 203.0.113.10
                                          │
                                          ├── /opt/qualityguard (.env.production)
                                          │
@@ -31,7 +32,7 @@ Developer ──( git push main )──► GitHub Actions CI (Typecheck / Test /
             ┌────────────────────────────┼────────────────────────────┐
             ▼                            ▼                            ▼
       Caddy (HTTPS :443)          Web (Next.js :3000)         API (Node.js :8787)
-  [qualityguard.gfcode.com.br]           │                            │
+  [qualityguard.example.com]           │                            │
                                          └─────────────┬──────────────┘
                                                        │
                                         ┌──────────────┴──────────────┐
@@ -163,15 +164,53 @@ qualityguard baseline .
 
 ## Production & Operations Documentation
 
-- [VPS Deployment Guide](file:///docs/production/VPS-DEPLOYMENT.md): Initial server bootstrap, DNS, Docker setup, and environment configuration.
-- [Operations Runbook](file:///docs/production/OPERATIONS.md): Daily operations, service logs, health monitoring, backup inspection, and secret rotation.
-- [Rollback Strategy](file:///docs/production/ROLLBACK.md): Automated CI/CD rollback mechanics and manual recovery procedures.
-- [Disaster Recovery Plan](file:///docs/production/DISASTER-RECOVERY.md): Backup validation, database restoration, and bare-metal server provisioning.
-- [Billing & Stripe Configuration](file:///docs/commercial/BILLING.md): Stripe webhooks, products, and checkout setup.
-- [Architecture Overview](file:///docs/architecture/ARCHITECTURE.md): Monorepo workspace architecture and engine structure.
+- [VPS Deployment Guide](docs/production/VPS-DEPLOYMENT.md): Initial server bootstrap, DNS, Docker setup, and environment configuration.
+- [Operations Runbook](docs/production/OPERATIONS.md): Daily operations, service logs, health monitoring, backup inspection, and secret rotation.
+- [Rollback Strategy](docs/production/ROLLBACK.md): Automated CI/CD rollback mechanics and manual recovery procedures.
+- [Disaster Recovery Plan](docs/production/DISASTER-RECOVERY.md): Backup validation, database restoration, and bare-metal server provisioning.
+- [Billing & Stripe Configuration](docs/commercial/BILLING.md): Stripe webhooks, products, and checkout setup.
+- [Architecture Overview](docs/architecture/ARCHITECTURE.md): Monorepo workspace architecture and engine structure.
 
 ---
 
 ## Product Roadmap
 
-See [ROADMAP.md](file:///ROADMAP.md) for product evolution beyond the production MVP.
+See [ROADMAP.md](ROADMAP.md) for product evolution and the open-source / cloud
+boundary.
+
+---
+
+## Open Source vs. Cloud
+
+QualityGuard's **Open Source Core** (this repository, AGPL-3.0) is a fully
+functional quality and architecture engine: analyzer, architecture
+intelligence, AI adapters, CLI, API, web app, and GitHub integration. It runs
+end-to-end locally and self-hosted with no proprietary dependency.
+
+**Cloud / commercial** concerns — managed hosting, billing operations, and
+enterprise governance — are documented as a separate boundary in
+[ROADMAP.md](ROADMAP.md) and [docs/FEATURE_MATRIX.md](docs/FEATURE_MATRIX.md).
+
+---
+
+## Contributing
+
+Contributions are welcome! Please read:
+
+- [CONTRIBUTING.md](CONTRIBUTING.md) — setup, workflow, testing, and PR process
+- [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) — community expectations
+- [SECURITY.md](SECURITY.md) — how to report vulnerabilities privately
+
+A good first contribution is a new analyzer rule in `packages/analyzer` or a
+documentation improvement.
+
+---
+
+## License
+
+QualityGuard is licensed under the **GNU Affero General Public License v3.0**
+(AGPL-3.0-only). See [LICENSE](LICENSE) for the full text.
+
+The AGPL requires that if you run a modified version of QualityGuard as a network
+service, you must make the corresponding source code available to its users. For
+commercial licensing inquiries, contact the maintainers.
