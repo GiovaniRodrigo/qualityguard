@@ -4,6 +4,16 @@
   "version": "0.1.0",
   "description": "AI-powered software quality and architecture governance",
   "packageManager": "pnpm@10.15.0",
+  "license": "AGPL-3.0-only",
+  "author": "QualityGuard Contributors",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/GiovaniRodrigo/qualityguard.git"
+  },
+  "homepage": "https://github.com/GiovaniRodrigo/qualityguard#readme",
+  "bugs": {
+    "url": "https://github.com/GiovaniRodrigo/qualityguard/issues"
+  },
   "scripts": {
     "build": "pnpm -r build",
     "test": "pnpm -r test",
@@ -12,5 +22,10 @@
   },
   "engines": {
     "node": ">=22"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.3.3",
+    "postcss": "^8.5.0",
+    "tailwindcss": "^4.3.3"
   }
 }

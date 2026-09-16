@@ -1,0 +1,49 @@
+name: Feature request
+description: Suggest an idea or improvement
+labels: ["enhancement", "triage"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem / motivation
+      description: What problem does this solve? Who benefits?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: Describe what you would like to happen.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Other approaches you have thought about.
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      options:
+        - analyzer
+        - architecture
+        - ai
+        - api
+        - web
+        - cli
+        - github integration
+        - docs / other
+    validations:
+      required: true
+  - type: dropdown
+    id: tier
+    attributes:
+      label: Which tier does this belong to?
+      description: See ROADMAP.md for the open-source / cloud boundary.
+      options:
+        - Open Source Core
+        - Cloud / Commercial
+        - Not sure
+    validations:
+      required: true

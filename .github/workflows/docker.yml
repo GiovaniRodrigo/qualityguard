@@ -1,0 +1,63 @@
+name: Docker
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/api/**"
+      - "apps/web/**"
+      - "packages/**"
+      - "integrations/**"
+      - "**/Dockerfile"
+      - "docker-compose*.yml"
+      - "pnpm-lock.yaml"
+  pull_request:
+    paths:
+      - "apps/api/**"
+      - "apps/web/**"
+      - "packages/**"
+      - "integrations/**"
+      - "**/Dockerfile"
+      - "docker-compose*.yml"
+      - "pnpm-lock.yaml"
+
+permissions:
+  contents: read
+
+jobs:
+  build-images:
+    name: Build ${{ matrix.app }} image
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        app: [api, web]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Build ${{ matrix.app }} image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/${{ matrix.app }}/Dockerfile
+          push: false
+          load: true
+          tags: qualityguard-${{ matrix.app }}:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  compose-config:
+    name: Validate compose files
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate dev compose
+        run: docker compose -f docker-compose.yml config --quiet
+      - name: Validate production compose
+        env:
+          POSTGRES_DB: qualityguard
+          POSTGRES_USER: qualityguard
+          POSTGRES_PASSWORD: ci
+          QUALITYGUARD_AUTH_SECRET: ci-secret-placeholder-min-32-characters
+        run: docker compose -f docker-compose.production.yml config --quiet

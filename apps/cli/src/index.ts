@@ -9,7 +9,7 @@ const IGNORED = new Set(['node_modules', '.git', 'dist', 'build', 'coverage', '.
 
 type File = { path: string; content: string };
 
-async function collectFiles(root: string, current = root): Promise<File[]> {
+export async function collectFiles(root: string, current = root): Promise<File[]> {
   const entries = await readdir(current, { withFileTypes: true });
   const files: File[] = [];
   for (const entry of entries) {
@@ -21,7 +21,7 @@ async function collectFiles(root: string, current = root): Promise<File[]> {
   return files;
 }
 
-async function resolveRoot(target: string): Promise<string> {
+export async function resolveRoot(target: string): Promise<string> {
   const absolute = join(process.cwd(), target);
   return (await stat(absolute)).isDirectory() ? absolute : process.cwd();
 }
@@ -48,7 +48,15 @@ function printResult(result: ReturnType<typeof analyze>, gate?: ReturnType<typeo
   }
 }
 
-async function runAnalysis(root: string, args: string[]) {
+import type { Finding, ReviewResult } from '@qualityguard/domain';
+import type { QualityGateResult } from '@qualityguard/analyzer';
+
+export interface CLIAnalysisResult {
+  result: ReviewResult;
+  gate: QualityGateResult;
+}
+
+export async function runAnalysis(root: string, args: string[]): Promise<CLIAnalysisResult> {
   const config = await loadConfig(root, args.find((arg) => arg.startsWith('--config='))?.slice(9));
   const files = await getFiles(root, args.includes('--diff'), args.includes('--staged'));
   const base = analyze({ files, rules: configuredRules(config) });
@@ -61,7 +69,7 @@ async function runAnalysis(root: string, args: string[]) {
   return { result, gate };
 }
 
-async function main(): Promise<void> {
+export async function main(): Promise<void> {
   const args = process.argv.slice(2);
   const command = args[0];
   const target = args[1] ?? '.';
@@ -83,4 +91,6 @@ async function main(): Promise<void> {
   else if (command === 'analyze' && gate.decision === 'block') process.exitCode = 1;
 }
 
-main().catch((error: unknown) => { console.error(error instanceof Error ? error.message : error); process.exitCode = 1; });
+if (!process.env.VITEST && process.argv[1] && (process.argv[1].endsWith('/qualityguard') || process.argv[1].endsWith('/dist/index.js') || process.argv[1].endsWith('/src/index.js'))) {
+  main().catch((error: unknown) => { console.error(error instanceof Error ? error.message : error); process.exitCode = 1; });
+}

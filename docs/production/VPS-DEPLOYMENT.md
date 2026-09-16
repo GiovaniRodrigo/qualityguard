@@ -1,6 +1,10 @@
 # QualityGuard — produção no VPS
 
-Domínio de produção: `qualityguard.gfcode.com.br`
+> **Placeholders:** `qualityguard.example.com` e `203.0.113.10` são valores de
+> exemplo (RFC 2606 / RFC 5737). Substitua pelo seu domínio e IP reais ao seguir
+> este guia. Nunca faça commit do IP ou domínio de produção reais no repositório.
+
+Domínio de produção: `qualityguard.example.com`
 
 A stack usa Docker Compose em host único, PostgreSQL persistente, Redis persistente, API Node.js, Next.js e Caddy para HTTPS automático.
 
@@ -11,11 +15,11 @@ Crie um registro:
 ```text
 Tipo: A
 Nome: qualityguard
-Valor: 2.25.92.154
+Valor: 203.0.113.10
 TTL: 300
 ```
 
-Antes de subir a stack, confirme que `qualityguard.gfcode.com.br` resolve para o VPS.
+Antes de subir a stack, confirme que `qualityguard.example.com` resolve para o VPS.
 
 ## 2. Preparar o VPS
 
@@ -23,7 +27,7 @@ Como o repositório é privado no GitHub, o `raw.githubusercontent.com` direto s
 
 ### Opção A (Recomendada): Executar a partir da sua máquina local via SSH
 ```bash
-ssh root@2.25.92.154 'bash -s' < deploy/bootstrap-vps.sh
+ssh root@203.0.113.10 'bash -s' < deploy/bootstrap-vps.sh
 ```
 
 ### Opção B: Baixar no VPS usando Token do GitHub (PAT)
@@ -78,21 +82,21 @@ Verifique:
 
 ```bash
 docker compose --env-file .env.production -f docker-compose.production.yml ps
-curl -f https://qualityguard.gfcode.com.br/api/health
+curl -f https://qualityguard.example.com/api/health
 ```
 
 A API executa a migration inicial antes de aceitar tráfego. O endpoint `/api/ready` retorna HTTP 200 somente quando PostgreSQL está acessível.
 
 ## 5. HTTPS
 
-O Caddy termina TLS no domínio `qualityguard.gfcode.com.br`. Para emissão automática do certificado, DNS deve apontar para o VPS e as portas 80/443 precisam estar acessíveis.
+O Caddy termina TLS no domínio `qualityguard.example.com`. Para emissão automática do certificado, DNS deve apontar para o VPS e as portas 80/443 precisam estar acessíveis.
 
 ## 6. Stripe
 
 Configure no Stripe:
 
 ```text
-https://qualityguard.gfcode.com.br/api/webhooks/stripe
+https://qualityguard.example.com/api/webhooks/stripe
 ```
 
 Eventos principais:
@@ -116,7 +120,7 @@ O workflow `.github/workflows/deploy-production.yml` está preparado para:
 
 Configure no GitHub Environment `production`:
 
-- `PRODUCTION_HOST=2.25.92.154`
+- `PRODUCTION_HOST=203.0.113.10`
 - `PRODUCTION_USER=qualityguard`
 - `PRODUCTION_SSH_KEY=<chave privada do deploy>`
 

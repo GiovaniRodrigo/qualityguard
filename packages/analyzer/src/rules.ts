@@ -4,7 +4,8 @@ export interface SourceFile { path: string; content: string; }
 export interface Rule { id: string; analyze(file: SourceFile): Finding[]; }
 
 function finding(file: SourceFile, line: number, data: Omit<Finding, 'id' | 'file' | 'line' | 'source'>): Finding {
-  return { ...data, id: `${data.ruleId ?? 'QG'}-${line}`, file: file.path, line, source: 'deterministic' };
+  const fileKey = file.path.replace(/[^a-zA-Z0-9_-]/g, '_');
+  return { ...data, id: `${data.ruleId ?? 'QG'}-${fileKey}-${line}`, file: file.path, line, source: 'deterministic' };
 }
 
 const importPattern = /(?:from\s+['"]|import\s+['"]|require\(\s*['"])([^'"]+)['"]/i;
@@ -82,4 +83,46 @@ export const missingTest: Rule = {
   },
 };
 
-export const defaultRules: Rule[] = [noInfrastructureImport, hardcodedSecret, highComplexity, missingTest];
+export const sqlInjectionRisk: Rule = {
+  id: 'security.sql-injection',
+  analyze(file) {
+    const sqlPattern = /\.(?:query|execute|raw)\s*\(\s*`[^`]*(?:SELECT|INSERT|UPDATE|DELETE|FROM|WHERE)[^`]*\$\{/i;
+    const sqlConcatPattern = /\.(?:query|execute|raw)\s*\(\s*['"][^'"]*(?:SELECT|INSERT|UPDATE|DELETE|FROM|WHERE)[^'"]*['"]\s*\+/i;
+    return file.content.split(/\r?\n/).flatMap((line, index) => {
+      if (!sqlPattern.test(line) && !sqlConcatPattern.test(line)) return [];
+      return [finding(file, index + 1, {
+        severity: 'high', category: 'security', status: 'open', decision: 'block',
+        title: 'Potential SQL injection vulnerability',
+        description: 'Direct string interpolation or concatenation in a database query execution method can allow malicious SQL execution.',
+        suggestion: 'Use parameterized queries or prepared statements instead of string concatenation.',
+        confidence: 0.94, ruleId: 'security.sql-injection', evidence: [line.trim()],
+      })];
+    });
+  },
+};
+
+export const emptyCatchBlock: Rule = {
+  id: 'clean_code.empty-catch',
+  analyze(file) {
+    const emptyCatchPattern = /catch\s*(?:\([^)]*\))?\s*\{\s*\}/;
+    return file.content.split(/\r?\n/).flatMap((line, index) => {
+      if (!emptyCatchPattern.test(line)) return [];
+      return [finding(file, index + 1, {
+        severity: 'medium', category: 'clean_code', status: 'open', decision: 'review_required',
+        title: 'Empty catch block silently swallowing exceptions',
+        description: 'An empty catch block discards error state without logging or handling, making debugging difficult and masking failures.',
+        suggestion: 'Log the error or handle the exception explicitly.',
+        confidence: 0.89, ruleId: 'clean_code.empty-catch', evidence: [line.trim()],
+      })];
+    });
+  },
+};
+
+export const defaultRules: Rule[] = [
+  noInfrastructureImport,
+  hardcodedSecret,
+  highComplexity,
+  missingTest,
+  sqlInjectionRisk,
+  emptyCatchBlock,
+];

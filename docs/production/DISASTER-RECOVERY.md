@@ -55,11 +55,11 @@ bash deploy/smoke-test.sh
 
 ## 4. Scenario B: Full Server Rebuild (Bare Metal / New VPS)
 
-Use this scenario if the VPS `2.25.92.154` is permanently lost or corrupted.
+Use this scenario if the VPS `203.0.113.10` is permanently lost or corrupted.
 
 ### Step 1: Provision Clean Server
 - OS: Ubuntu 22.04 LTS or 24.04 LTS (x86_64).
-- Point DNS A-record `qualityguard.gfcode.com.br` to the new VPS public IP address.
+- Point DNS A-record `qualityguard.example.com` to the new VPS public IP address.
 
 ### Step 2: Bootstrap Server Environment
 From your local machine or using GitHub PAT:

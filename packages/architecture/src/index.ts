@@ -17,4 +17,8 @@ function normalize(path:string){const out:string[]=[]; for(const p of path.split
 
 export function findCycles(graph: ArchitectureGraph): string[][] { const adjacency = new Map<string,string[]>(); for(const n of graph.nodes) adjacency.set(n,[]); for(const e of graph.edges) adjacency.get(e.from)?.push(e.to); const cycles:string[][]=[];
   for(const start of graph.nodes){const stack:string[]=[]; const visiting=new Set<string>(); const walk=(node:string)=>{stack.push(node);visiting.add(node);for(const next of adjacency.get(node)??[]){const i=stack.indexOf(next);if(i>=0)cycles.push([...stack.slice(i),next]);else if(!visiting.has(next))walk(next);}visiting.delete(node);stack.pop();};walk(start);} return uniqueCycles(cycles); }
-function uniqueCycles(cycles:string[][]){const seen=new Set<string>();return cycles.filter(c=>{const key=[...c].sort().join('|');if(seen.has(key))return false;seen.add(key);return true;});}
+function uniqueCycles(cycles:string[][]){const seen=new Set<string>();return cycles.filter(c=>{const key=[...new Set(c)].sort().join('|');if(seen.has(key))return false;seen.add(key);return true;});}
+
+export * from './governance.js';
+export * from './engine.js';
+
