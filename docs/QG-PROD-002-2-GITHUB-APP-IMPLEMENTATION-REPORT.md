@@ -88,7 +88,7 @@ Inspection of host and container environments:
 | Variable Name | Required Format | Current Status | Masked Presentation |
 |---|---|:---:|:---:|
 | `GITHUB_APP_ID` | Numerical ID (e.g. `123456`) | `MISSING` | `MISSING` |
-| `GITHUB_APP_PRIVATE_KEY` | RS256 PEM Key (`-----BEGIN RSA PRIVATE KEY-----`) | `MISSING` | `MISSING` |
+| `GITHUB_APP_PRIVATE_KEY` | RS256 PEM Key (`PEM private key (BEGIN/END markers)`) | `MISSING` | `MISSING` |
 | `GITHUB_WEBHOOK_SECRET` | String (32+ chars) | `MISSING` | `MISSING` |
 
 ### Security & Git Hygiene Audit
@@ -152,7 +152,7 @@ Inspection of host and container environments:
    - In `.env.production` on VPS:
      ```bash
      GITHUB_APP_ID=<App_ID>
-     GITHUB_APP_PRIVATE_KEY="-----BEGIN RSA PRIVATE KEY-----\n...\n-----END RSA PRIVATE KEY-----"
+     GITHUB_APP_PRIVATE_KEY="<your PEM private key>"
      GITHUB_WEBHOOK_SECRET=<Webhook_Secret>
      ```
    - Restart API container: `docker compose -f docker-compose.production.yml restart api`.

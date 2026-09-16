@@ -1,39 +1,45 @@
 # Gitleaks configuration for QualityGuard
 #
-# QualityGuard is itself a code-quality and secret-detection tool. Its test
-# suites, fixtures, documentation, and AI remediation examples deliberately
-# contain FAKE or PLACEHOLDER secrets so the detection rules can be exercised
-# and so runbooks can show the expected format. None of these are real.
+# QualityGuard is itself a code-quality / secret-detection tool, so its test
+# suites and AI remediation examples deliberately embed FAKE secrets to exercise
+# the detection rules. This config keeps the full default ruleset active on ALL
+# files (no path is excluded) and allowlists ONLY the specific, known-fake
+# literal values below. Any other secret — including a real one in a test file,
+# a doc, or a fixture — is still detected.
 #
-# This config extends the default gitleaks ruleset (so real secret detection
-# stays fully active on all production source) and allowlists only the
-# deliberately-fake material.
+# Scope policy: value-specific regexes only. Do NOT add broad `paths`
+# exclusions (e.g. docs/**, *.test.*) — those would hide real secrets. Every
+# entry here must be an obviously-fake, well-known placeholder string. If a new
+# fixture needs allowlisting, add its exact literal value, not a path.
 
 [extend]
 useDefault = true
 
 [allowlist]
-description = "Fake/placeholder secrets in tests, fixtures, docs, and AI examples"
-
-# Path allowlists — these locations legitimately contain fake secrets.
-paths = [
-  # Test files exercise the secret-detection rules with fake secrets.
-  '''.*\.test\.(ts|tsx|js|mjs|cjs)$''',
-  '''.*/__tests__/.*''',
-  # Test fixtures (sample coverage/scan inputs).
-  '''(^|/)fixtures/.*''',
-  # Human-readable runbooks and reports with placeholder examples
-  # (truncated JWTs, "SEU_GITHUB_TOKEN", RSA key format descriptions, etc.).
-  '''(^|/)docs/.*''',
-]
-
-# Regex allowlists — surgical, so the rest of these production files stay
-# scanned for genuinely new secrets.
+description = "Known fake/placeholder secrets used in tests, docs, and AI examples"
+# Match each allowlisted value against the captured secret itself.
+regexTarget = "secret"
 regexes = [
-  # AI remediation "Before (Vulnerable)" example string in packages/ai/src/providers.ts
-  '''sk-live-1234567890abcdef''',
-  # CI-only placeholder used to validate the production compose file
+  # CI-only placeholder for validating the production compose file (docker.yml)
   '''ci-secret-placeholder-min-32-characters''',
-  # Canonical AWS documentation example key
+  # Documentation placeholder for a generated JWT secret
+  '''GENERATED_64_CHAR_HEX_SECRET_FOR_JWT''',
+  # Placeholder token in a curl example (Portuguese: "your GitHub token")
+  '''SEU_GITHUB_TOKEN''',
+  # Truncated JWT shown in smoke-test runbooks (ends in literal "...")
+  '''eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\.\.\.''',
+  # Fake JWT fixture in packages/ai/src/ai.test.ts
+  '''eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\.eyJzdWIiOiIxMjM0NTY3ODkwIn0\.doNotLeakThisSignaturePart123''',
+  # Malformed fake JWT fixture in packages/analyzer/src/comparison.test.ts
+  '''eyJhGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9''',
+  # Fake OpenAI-style keys in tests and the AI remediation "Before" example
+  '''sk-proj-1234567890abcdef1234567890abcdef''',
+  '''sk-live-1234567890abcdef''',
+  '''sk-1234567890123456789012345''',
+  # Fake GitHub PAT fixture in packages/ai/src/ai.test.ts (redaction test)
+  '''ghp_123456789012345678901234567890123456''',
+  # Fake generic key fixture in packages/analyzer/src/rules.test.ts
+  '''123456789abcdef''',
+  # Canonical AWS documentation example access key
   '''AKIAIOSFODNN7EXAMPLE''',
 ]

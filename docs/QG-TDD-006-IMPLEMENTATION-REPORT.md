@@ -57,7 +57,7 @@ X-Accel-Buffering: no
    - JWTs (`eyJ...` ➔ `[REDACTED_JWT]`)
    - Bearer Tokens (`Bearer ...` ➔ `Bearer [REDACTED_BEARER_TOKEN]`)
    - Database URIs (`postgres://user:pass@host:5432/db` ➔ `postgres://user:[REDACTED_PASSWORD]@host:5432/db`)
-   - Private Keys (`-----BEGIN RSA PRIVATE KEY-----...` ➔ `[REDACTED_PRIVATE_KEY]`)
+   - Private Keys (`PEM private key (BEGIN/END markers)` ➔ `[REDACTED_PRIVATE_KEY]`)
 3. **Prompt Injection Mitigation**: Code excerpts and finding details are enclosed in untrusted XML delimiters (`<code_context untrusted="true">`). System prompts explicitly instruct the AI to treat contents of those tags strictly as passive data, ignoring any commands contained within code comments or string literals.
 4. **Context Window Protection**: Strict caps: max 5 files, 16 KB per file, 64 KB total context, 8 KB finding context.
 5. **Safe Markdown Rendering**: The frontend uses a custom tokenizer/AST parser converting markdown syntax directly to React virtual DOM elements (`<h3>`, `<p>`, `<ul>`, `<code>`, `<pre>`), preventing any execution of malicious `<script>` or HTML tags.

@@ -39,7 +39,7 @@ To elevate external integrations to full public `LIVE VERIFIED`, the following s
 
 ### 3.1 GitHub App Integration
 - `GITHUB_APP_ID`: Numeric App ID from GitHub Developer Settings.
-- `GITHUB_APP_PRIVATE_KEY`: RSA Private Key PEM (`-----BEGIN RSA PRIVATE KEY-----...`).
+- `GITHUB_APP_PRIVATE_KEY`: RSA Private Key PEM (`PEM private key (BEGIN/END markers)`).
 - `GITHUB_WEBHOOK_SECRET`: Cryptographic random hex string configured in GitHub App Webhook settings.
 - **Permissions Required on GitHub App:**
   - `Pull requests`: Read & Write (for inline review comments).
