@@ -8,33 +8,12 @@
 
 ## 1. Domain Entity Hierarchy & Ownership
 
-```
-                       ┌──────────────────────┐
-                       │     User (Auth)      │
-                       │ id, email, passHash  │
-                       └──────────┬───────────┘
-                                  │ 1 : 1 (Owner)
-                                  ▼
-                       ┌──────────────────────┐
-                       │     Organization     │
-                       │ id, name, ownerId,   │
-                       │ plan, stripeCustId   │
-                       └──────────┬───────────┘
-                                  │ 1 : N
-                                  ▼
-                       ┌──────────────────────┐
-                       │       Project        │
-                       │ id, organizationId,  │
-                       │ name, repository     │
-                       └──────────┬───────────┘
-                                  │ 1 : N
-                 ┌────────────────┴────────────────┐
-                 ▼                                 ▼
-    ┌───────────────────────────┐    ┌───────────────────────────┐
-    │        AnalysisJob        │    │          Review           │
-    │ id, projectId, orgId,     │    │ id, projectId, orgId,     │
-    │ status, branch, progress  │    │ score, gate, findings[]   │
-    └───────────────────────────┘    └───────────────────────────┘
+```mermaid
+flowchart TD
+    User["User (Auth)<br/>id, email, passHash"] -->|"1 : 1 (Owner)"| Org["Organization<br/>id, name, ownerId,<br/>plan, stripeCustId"]
+    Org -->|"1 : N"| Project["Project<br/>id, organizationId,<br/>name, repository"]
+    Project -->|"1 : N"| Job["AnalysisJob<br/>id, projectId, orgId,<br/>status, branch, progress"]
+    Project -->|"1 : N"| Review["Review<br/>id, projectId, orgId,<br/>score, gate, findings[]"]
 ```
 
 ---

@@ -20,65 +20,21 @@ All 92/92 automated tests are passing across the monorepo. Typecheck (`tsc --noE
 
 ## 2. End-to-End Pipeline & Architecture Mapping
 
-```
-                                  [External World]
-                                         │
-                 ┌───────────────────────┴────────────────────────┐
-                 ▼                                                ▼
-        [GitHub Webhooks]                              [Web UI / REST Clients]
-   (POST /webhooks/github)                           (POST /projects/:id/analyses)
-                 │                                                │
-                 ▼                                                ▼
-   ┌───────────────────────────┐                    ┌───────────────────────────┐
-   │ HMAC-SHA256 Signature     │                    │ JWT Token Authentication  │
-   │ & Delivery Idempotency    │                    │ & Tenant Ownership Check  │
-   └─────────────┬─────────────┘                    └─────────────┬─────────────┘
-                 │                                                │
-                 ▼                                                ▼
-   ┌───────────────────────────┐                    ┌───────────────────────────┐
-   │ Check Run: 'in_progress'  │                    │ AnalysisQueue.enqueue()   │
-   │ & PR Diff Extraction      │                    │ State: 'queued' (HTTP 202)│
-   └─────────────┬─────────────┘                    └─────────────┬─────────────┘
-                 │                                                │
-                 └───────────────────────┬────────────────────────┘
-                                         ▼
-                        ┌─────────────────────────────────┐
-                        │   AnalysisQueue Worker Pool     │
-                        │   (FIFO, Concurrency Limit)     │
-                        └────────────────┬────────────────┘
-                                         │
-                                         ▼
-                        ┌─────────────────────────────────┐
-                        │  SandboxedRepositoryCloner      │
-                        │  - 45s Hard SIGKILL Timeout     │
-                        │  - 50MB Disk Quota Enforcement  │
-                        │  - Submodules Disabled          │
-                        │  - Isolated Temp Workspace      │
-                        └────────────────┬────────────────┘
-                                         │
-                                         ▼
-                        ┌─────────────────────────────────┐
-                        │   QualityGuard Analysis Engine  │
-                        │   1. Deterministic AST Rules    │
-                        │   2. Architecture Dependency &  │
-                        │      Cycle/Drift Graph          │
-                        │   3. Manifest Dependency Parser │
-                        │   4. Quality Gate Evaluation    │
-                        │   5. Category Score Aggregation │
-                        └────────────────┬────────────────┘
-                                         │
-                                         ▼
-                        ┌─────────────────────────────────┐
-                        │ Workspace Cleanup (`finally`)   │
-                        └────────────────┬────────────────┘
-                                         │
-                 ┌───────────────────────┴────────────────────────┐
-                 ▼                                                ▼
-   ┌───────────────────────────┐                    ┌───────────────────────────┐
-   │ Check Run: 'completed'    │                    │ State: 'completed' (100%) │
-   │ + Inline PR Comments &    │                    │ Persisted to Postgres /   │
-   │ Summary Review Body       │                    │ Memory Store              │
-   └───────────────────────────┘                    └───────────────────────────┘
+```mermaid
+flowchart TD
+    Ext["External World"] --> GH["GitHub Webhooks<br/>(POST /webhooks/github)"]
+    Ext --> Web["Web UI / REST Clients<br/>(POST /projects/:id/analyses)"]
+    GH --> HMAC["HMAC-SHA256 Signature<br/>& Delivery Idempotency"]
+    Web --> JWT["JWT Token Authentication<br/>& Tenant Ownership Check"]
+    HMAC --> Check1["Check Run: 'in_progress'<br/>& PR Diff Extraction"]
+    JWT --> Enqueue["AnalysisQueue.enqueue()<br/>State: 'queued' (HTTP 202)"]
+    Check1 --> Pool["AnalysisQueue Worker Pool<br/>(FIFO, Concurrency Limit)"]
+    Enqueue --> Pool
+    Pool --> Cloner["SandboxedRepositoryCloner<br/>- 45s Hard SIGKILL Timeout<br/>- 50MB Disk Quota Enforcement<br/>- Submodules Disabled<br/>- Isolated Temp Workspace"]
+    Cloner --> Engine["QualityGuard Analysis Engine<br/>1. Deterministic AST Rules<br/>2. Architecture Dependency & Cycle/Drift Graph<br/>3. Manifest Dependency Parser<br/>4. Quality Gate Evaluation<br/>5. Category Score Aggregation"]
+    Engine --> Cleanup["Workspace Cleanup (finally)"]
+    Cleanup --> Done1["Check Run: 'completed'<br/>+ Inline PR Comments &<br/>Summary Review Body"]
+    Cleanup --> Done2["State: 'completed' (100%)<br/>Persisted to Postgres /<br/>Memory Store"]
 ```
 
 ---

@@ -12,23 +12,19 @@
 
 The QualityGuard production stack achieves sub-50ms API ingress latencies, non-blocking asynchronous analysis job queuing, and consistent sub-10s end-to-end repository clone and AST analysis processing.
 
-```
-┌────────────────────────────────────────────────────────────────────────┐
-│                   PERFORMANCE SLA SCORECARD                            │
-├──────────────────────────────────────┬─────────────┬──────────┬────────┤
-│ Metric                               │ SLA Target  │ Measured │ Status │
-├──────────────────────────────────────┼─────────────┼──────────┼────────┤
-│ API Health/Ready Response            │ < 20 ms     │ 1.8 ms   │  PASS  │
-│ Webhook Ingestion & ACK              │ < 100 ms    │ 18.4 ms  │  PASS  │
-│ Async Job Enqueue Latency            │ < 50 ms     │ 14.2 ms  │  PASS  │
-│ Sandboxed Git Clone (depth 1)        │ < 15,000 ms │ 4,120 ms │  PASS  │
-│ AST Parsing & Graph Construction     │ < 5,000 ms  │ 1,430 ms │  PASS  │
-│ DB Persistence (Findings + Graph)    │ < 100 ms    │ 38.0 ms  │  PASS  │
-│ Total E2E Job Turnaround (ai-memory) │ < 30,000 ms │ 5,850 ms │  PASS  │
-│ API Idle Memory (RSS)                │ < 256 MB    │ 94 MB    │  PASS  │
-│ Total Stack Idle Memory              │ < 1,024 MB  │ 242 MB   │  PASS  │
-└──────────────────────────────────────┴─────────────┴──────────┴────────┘
-```
+**PERFORMANCE SLA SCORECARD**
+
+| Metric | SLA Target | Measured | Status |
+| :--- | :--- | :--- | :---: |
+| API Health/Ready Response | < 20 ms | 1.8 ms | PASS |
+| Webhook Ingestion & ACK | < 100 ms | 18.4 ms | PASS |
+| Async Job Enqueue Latency | < 50 ms | 14.2 ms | PASS |
+| Sandboxed Git Clone (depth 1) | < 15,000 ms | 4,120 ms | PASS |
+| AST Parsing & Graph Construction | < 5,000 ms | 1,430 ms | PASS |
+| DB Persistence (Findings + Graph) | < 100 ms | 38.0 ms | PASS |
+| Total E2E Job Turnaround (ai-memory) | < 30,000 ms | 5,850 ms | PASS |
+| API Idle Memory (RSS) | < 256 MB | 94 MB | PASS |
+| Total Stack Idle Memory | < 1,024 MB | 242 MB | PASS |
 
 ---
 
@@ -55,14 +51,15 @@ Measurements taken under steady-state production conditions:
 
 Benchmarked against real external repository: `akitaonrails/ai-memory` (branch `release/2.2`):
 
-```
-0s ───────► 1s ───────► 2s ───────► 3s ───────► 4s ───────► 5s ───────► 6s
-┌──────────────────────────────────────────────┬──────────────────┬───┐
-│ Git Sandboxed Clone (depth 1, no-tags)       │ AST Analysis &   │DB │
-│ 4,120 ms                                     │ Architecture Map │38 │
-│                                              │ 1,430 ms         │ms │
-└──────────────────────────────────────────────┴──────────────────┴───┘
- ◄────────────────────── Total: 5,850 ms ─────────────────────────────►
+```mermaid
+gantt
+    title E2E Analysis Pipeline — Total 5,850 ms
+    dateFormat x
+    axisFormat %L ms
+    section Pipeline
+    Git Sandboxed Clone (depth 1, no-tags) — 4,120 ms :done, clone, 0, 4120
+    AST Analysis & Architecture Map — 1,430 ms        :active, ast, after clone, 1430
+    DB Persistence — 38 ms                            :db, after ast, 38
 ```
 
 ### Phase-by-Phase Profile:

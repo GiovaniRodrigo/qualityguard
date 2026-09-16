@@ -26,36 +26,13 @@
 
 ## 2. Production Topology & Traffic Flow
 
-```
-                            [ Internet (WAN) ]
-                                    │
-                                    │ HTTPS (443) / HTTP (80)
-                                    ▼
-                     ┌─────────────────────────────┐
-                     │     Caddy 2 Reverse Proxy   │ (caddy:2-alpine)
-                     │  - Automatic TLS Certificate│
-                     │  - Security Headers (HSTS)  │
-                     └──────────────┬──────────────┘
-                                    │
-          ┌─────────────────────────┴─────────────────────────┐
-          │                                                   │
-          ▼ /api/*, /webhooks/*, /health, /ready              ▼ /* (Web UI)
-┌─────────────────────────────────┐                 ┌─────────────────────────────────┐
-│     QualityGuard API Service    │                 │   Next.js 16 Standalone Web UI  │
-│  - Sandboxed Repository Cloner  │                 │  - Dynamic Dashboard            │
-│  - Analysis Queue (FIFO)        │                 │  - Interactive Graph Explorer   │
-│  - GitHub PR Governance Engine  │                 │  - Real-Time Analysis Polling   │
-│  - Webhook HMAC-SHA256 Validator│                 └─────────────────────────────────┘
-└────────────────┬────────────────┘                                   ▲
-                 │                                                    │
-                 │ Internal DB Queries                                │ Internal API Proxy
-                 ▼                                                    │ (API_URL=http://api:8787)
-┌─────────────────────────────────┐                                   │
-│    PostgreSQL 16 (Alpine)       │───────────────────────────────────┘
-│  - Volume: qualityguard_pg      │
-│  - Tables: users, orgs, projects│
-│    reviews, usage, audit, events│
-└─────────────────────────────────┘
+```mermaid
+flowchart TD
+    WAN["Internet (WAN)"] -->|"HTTPS (443) / HTTP (80)"| Caddy["Caddy 2 Reverse Proxy (caddy:2-alpine)<br/>- Automatic TLS Certificate<br/>- Security Headers (HSTS)"]
+    Caddy -->|"/api/*, /webhooks/*, /health, /ready"| API["QualityGuard API Service<br/>- Sandboxed Repository Cloner<br/>- Analysis Queue (FIFO)<br/>- GitHub PR Governance Engine<br/>- Webhook HMAC-SHA256 Validator"]
+    Caddy -->|"/* (Web UI)"| Web["Next.js 16 Standalone Web UI<br/>- Dynamic Dashboard<br/>- Interactive Graph Explorer<br/>- Real-Time Analysis Polling"]
+    API -->|"Internal DB Queries"| PG["PostgreSQL 16 (Alpine)<br/>- Volume: qualityguard_pg<br/>- Tables: users, orgs, projects,<br/>reviews, usage, audit, events"]
+    Web -->|"Internal API Proxy<br/>(API_URL=http://api:8787)"| API
 ```
 
 ---

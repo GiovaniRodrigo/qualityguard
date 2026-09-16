@@ -10,57 +10,87 @@
 
 QualityGuard combines deterministic analysis, architecture intelligence and optional AI review into an executable quality-control layer for software teams.
 
+<p align="center">
+  <img src="docs/images/dashboard-ky.png" alt="QualityGuard dashboard showing quality score, gate decision, severity breakdown and AI insight for an analyzed repository" width="100%">
+</p>
+
+<p align="center">
+  <em>The workspace dashboard: quality score, gate decision, architecture &amp; security signals, severity breakdown and AI-generated insight — for every analyzed repository.</em>
+</p>
+
+---
+
+## Screenshots
+
+<table>
+  <tr>
+    <td width="50%" valign="top">
+      <img src="docs/images/findings.png" alt="Findings command center with quality review, gate status, severity counters and prioritized findings"><br>
+      <sub><b>Findings command center</b> — quality review, gate status, severity counters, prioritized findings and full-text search across every rule detection.</sub>
+    </td>
+    <td width="50%" valign="top">
+      <img src="docs/images/architecture.png" alt="Architecture governance view listing detected circular dependency cycles"><br>
+      <sub><b>Architecture governance</b> — module/edge graph from the TypeScript AST, custom policy rules and circular-dependency detection with remediation hints.</sub>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <img src="docs/images/security.png" alt="Security view listing hardcoded secret detections with remediation guidance"><br>
+      <sub><b>Security signals</b> — static credential-exposure detections with file/line locations and remediation guidance.</sub>
+    </td>
+    <td width="50%" valign="top">
+      <img src="docs/images/dependencies.png" alt="Dependency inventory extracted from project manifests"><br>
+      <sub><b>Dependency inventory</b> — multi-language dependencies extracted from manifests (<code>package.json</code>, <code>requirements.txt</code>, <code>pyproject.toml</code>, <code>go.mod</code>, <code>pom.xml</code>, <code>Cargo.toml</code>).</sub>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <img src="docs/images/dashboard-healthy.png" alt="Dashboard for a repository that passes the quality gate with a score of 100"><br>
+      <sub><b>Passing quality gate</b> — a clean repository with zero open findings and a healthy, approved gate.</sub>
+    </td>
+    <td width="50%" valign="top">
+      <img src="docs/images/cli-analyze.png" alt="Terminal output of the qualityguard analyze command"><br>
+      <sub><b>CLI</b> — <code>qualityguard analyze</code> prints score, gate decision and every finding with rule id and suggested fix, ready for CI.</sub>
+    </td>
+  </tr>
+</table>
+
+> Screenshots use public open-source repositories as sample projects; the workspace and organization shown are illustrative.
+
 ---
 
 ## Architecture & Production Flow
 
-```text
-Developer ──( git push main )──► GitHub Actions CI (Typecheck / Test / Build)
-                                         │
-                                   [ CI Passes ]
-                                         │
-                                         ▼
-                                GitHub Actions CD (SSH)
-                                         │
-                                         ▼
-                                 VPS 203.0.113.10
-                                         │
-                                         ├── /opt/qualityguard (.env.production)
-                                         │
-                                         ▼
-                                  Docker Compose
-            ┌────────────────────────────┼────────────────────────────┐
-            ▼                            ▼                            ▼
-      Caddy (HTTPS :443)          Web (Next.js :3000)         API (Node.js :8787)
-  [qualityguard.example.com]           │                            │
-                                         └─────────────┬──────────────┘
-                                                       │
-                                        ┌──────────────┴──────────────┐
-                                        ▼                             ▼
-                               PostgreSQL 16 (:5432)            Redis 7 (:6379)
-                                (qualityguard_pg)             (qualityguard_redis)
+```mermaid
+flowchart TD
+    Dev["Developer — git push main"] --> CI["GitHub Actions CI<br/>Typecheck / Test / Build"]
+    CI --> Pass{{CI Passes}}
+    Pass --> CD["GitHub Actions CD (SSH)"]
+    CD --> VPS["VPS 203.0.113.10"]
+    VPS --> Env["/opt/qualityguard<br/>(.env.production)"]
+    Env --> Compose["Docker Compose"]
+    Compose --> Caddy["Caddy — HTTPS :443<br/>qualityguard.example.com"]
+    Compose --> Web["Web — Next.js :3000"]
+    Compose --> API["API — Node.js :8787"]
+    Web --> PG["PostgreSQL 16 :5432<br/>(qualityguard_pg)"]
+    API --> PG
+    Web --> Redis["Redis 7 :6379<br/>(qualityguard_redis)"]
+    API --> Redis
 ```
 
 ---
 
 ## Implemented Product Path
 
-```text
-CLI / GitHub PR
-      ↓
-Diff + repository context
-      ↓
-Deterministic rules ──→ baseline + deduplication
-      ↓
-AST + dependency graph ──→ architecture drift
-      ↓
-Optional AI providers ──→ strict schema validation
-      ↓
-Findings → score → Quality Gate
-      ↓
-GitHub Check / dashboard
-      ↓
-Organization → usage metering → Stripe subscription
+```mermaid
+flowchart TD
+    A["CLI / GitHub PR"] --> B["Diff + repository context"]
+    B --> C["Deterministic rules → baseline + deduplication"]
+    C --> D["AST + dependency graph → architecture drift"]
+    D --> E["Optional AI providers → strict schema validation"]
+    E --> F["Findings → score → Quality Gate"]
+    F --> G["GitHub Check / dashboard"]
+    G --> H["Organization → usage metering → Stripe subscription"]
 ```
 
 ---

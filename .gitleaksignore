@@ -1,10 +1,13 @@
 # Gitleaks fingerprint ignores — one line per known false positive.
 # Format: <commit>:<file>:<rule>:<startline>
 #
-# This single entry is a documentation PLACEHOLDER (a literal "BEGIN RSA PRIVATE
-# KEY" marker shown to illustrate the GITHUB_APP_PRIVATE_KEY env-var format),
-# committed in 7013867 before the docs were changed to a non-literal placeholder.
-# The current working tree no longer contains it; this ignores only that exact
-# historical occurrence. It is NOT a broad rule — any real private key, in any
-# file or commit, is still detected.
+# Both entries are the same documentation PLACEHOLDER: a literal "BEGIN RSA
+# PRIVATE KEY" marker shown inside a table cell to illustrate the expected
+# GITHUB_APP_PRIVATE_KEY env-var format (no key material — the row status is
+# MISSING). It was committed in 7013867 and again in 719fbdb before the docs
+# were changed to a non-literal placeholder. The current working tree no longer
+# contains it; these ignore only those exact historical occurrences. This is
+# NOT a broad rule — any real private key, in any other file or commit, is
+# still detected.
 701386752c70314c879a81a3d820e7984f1b0732:docs/QG-PROD-002-2-GITHUB-APP-IMPLEMENTATION-REPORT.md:private-key:91
+719fbdb7cbdc13d74c4803431bd8ed8126536324:docs/QG-PROD-002-2-GITHUB-APP-IMPLEMENTATION-REPORT.md:private-key:91

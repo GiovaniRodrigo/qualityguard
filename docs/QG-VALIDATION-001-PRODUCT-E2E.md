@@ -35,14 +35,11 @@ The entire execution was performed against the live containerized production sta
 | **Pipeline Latency (Real Git Clone + AST + Graph)** | `4,049 ms` (~4.05 seconds) | PASS |
 
 ### 2.2 Lifecycle State Transitions Observed
-```
-POST /projects/:id/analyses -> 202 Accepted { "status": "queued", "progress": 0 }
-  ↓ (Queue Worker Polling)
-State: "cloning" (progress: 20%)
-  ↓ (Sandboxed Shallow Git Clone)
-State: "analyzing" (progress: 50%)
-  ↓ (Multi-Language AST + Manifest Extractors + Architecture Engine)
-State: "completed" (progress: 100%) -> Review Persisted in PostgreSQL
+```mermaid
+flowchart TD
+    A["POST /projects/:id/analyses → 202 Accepted<br/>{ status: 'queued', progress: 0 }"] -->|"Queue Worker Polling"| B["State: 'cloning' (progress: 20%)"]
+    B -->|"Sandboxed Shallow Git Clone"| C["State: 'analyzing' (progress: 50%)"]
+    C -->|"Multi-Language AST + Manifest Extractors + Architecture Engine"| D["State: 'completed' (progress: 100%)<br/>→ Review Persisted in PostgreSQL"]
 ```
 
 ---
