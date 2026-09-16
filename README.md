@@ -10,6 +10,53 @@
 
 QualityGuard combines deterministic analysis, architecture intelligence and optional AI review into an executable quality-control layer for software teams.
 
+<p align="center">
+  <img src="docs/images/dashboard-ky.png" alt="QualityGuard dashboard showing quality score, gate decision, severity breakdown and AI insight for an analyzed repository" width="100%">
+</p>
+
+<p align="center">
+  <em>The workspace dashboard: quality score, gate decision, architecture &amp; security signals, severity breakdown and AI-generated insight — for every analyzed repository.</em>
+</p>
+
+---
+
+## Screenshots
+
+<table>
+  <tr>
+    <td width="50%" valign="top">
+      <img src="docs/images/findings.png" alt="Findings command center with quality review, gate status, severity counters and prioritized findings"><br>
+      <sub><b>Findings command center</b> — quality review, gate status, severity counters, prioritized findings and full-text search across every rule detection.</sub>
+    </td>
+    <td width="50%" valign="top">
+      <img src="docs/images/architecture.png" alt="Architecture governance view listing detected circular dependency cycles"><br>
+      <sub><b>Architecture governance</b> — module/edge graph from the TypeScript AST, custom policy rules and circular-dependency detection with remediation hints.</sub>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <img src="docs/images/security.png" alt="Security view listing hardcoded secret detections with remediation guidance"><br>
+      <sub><b>Security signals</b> — static credential-exposure detections with file/line locations and remediation guidance.</sub>
+    </td>
+    <td width="50%" valign="top">
+      <img src="docs/images/dependencies.png" alt="Dependency inventory extracted from project manifests"><br>
+      <sub><b>Dependency inventory</b> — multi-language dependencies extracted from manifests (<code>package.json</code>, <code>requirements.txt</code>, <code>pyproject.toml</code>, <code>go.mod</code>, <code>pom.xml</code>, <code>Cargo.toml</code>).</sub>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <img src="docs/images/dashboard-healthy.png" alt="Dashboard for a repository that passes the quality gate with a score of 100"><br>
+      <sub><b>Passing quality gate</b> — a clean repository with zero open findings and a healthy, approved gate.</sub>
+    </td>
+    <td width="50%" valign="top">
+      <img src="docs/images/cli-analyze.png" alt="Terminal output of the qualityguard analyze command"><br>
+      <sub><b>CLI</b> — <code>qualityguard analyze</code> prints score, gate decision and every finding with rule id and suggested fix, ready for CI.</sub>
+    </td>
+  </tr>
+</table>
+
+> Screenshots use public open-source repositories as sample projects; the workspace and organization shown are illustrative.
+
 ---
 
 ## Architecture & Production Flow
