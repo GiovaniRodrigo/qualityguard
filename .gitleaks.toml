@@ -1,0 +1,39 @@
+# Gitleaks configuration for QualityGuard
+#
+# QualityGuard is itself a code-quality and secret-detection tool. Its test
+# suites, fixtures, documentation, and AI remediation examples deliberately
+# contain FAKE or PLACEHOLDER secrets so the detection rules can be exercised
+# and so runbooks can show the expected format. None of these are real.
+#
+# This config extends the default gitleaks ruleset (so real secret detection
+# stays fully active on all production source) and allowlists only the
+# deliberately-fake material.
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Fake/placeholder secrets in tests, fixtures, docs, and AI examples"
+
+# Path allowlists — these locations legitimately contain fake secrets.
+paths = [
+  # Test files exercise the secret-detection rules with fake secrets.
+  '''.*\.test\.(ts|tsx|js|mjs|cjs)$''',
+  '''.*/__tests__/.*''',
+  # Test fixtures (sample coverage/scan inputs).
+  '''(^|/)fixtures/.*''',
+  # Human-readable runbooks and reports with placeholder examples
+  # (truncated JWTs, "SEU_GITHUB_TOKEN", RSA key format descriptions, etc.).
+  '''(^|/)docs/.*''',
+]
+
+# Regex allowlists — surgical, so the rest of these production files stay
+# scanned for genuinely new secrets.
+regexes = [
+  # AI remediation "Before (Vulnerable)" example string in packages/ai/src/providers.ts
+  '''sk-live-1234567890abcdef''',
+  # CI-only placeholder used to validate the production compose file
+  '''ci-secret-placeholder-min-32-characters''',
+  # Canonical AWS documentation example key
+  '''AKIAIOSFODNN7EXAMPLE''',
+]
