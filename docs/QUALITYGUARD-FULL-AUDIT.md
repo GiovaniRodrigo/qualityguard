@@ -83,12 +83,12 @@ graph TD
 ```mermaid
 graph LR
     Client["HTTPS Clients / Web / Webhooks"] -->|Port 80/443 TLS| Caddy["Caddy Reverse Proxy"]
-    Caddy -->|/api/*, /webhooks/*, /health, /ready| API["QualityGuard API (Fastify :8787)"]
-    Caddy -->|/* (UI Pages)| Web["QualityGuard Web (Next.js :3000)"]
-    API -->|PostgreSQL Wire Protocol :5432| PG[("PostgreSQL 16")]
-    API -->|RESP :6379| Redis[("Redis 7 Alpine")]
-    API -->|Git Clone / Sandbox| LocalFS[("Sandboxed Local Disk /tmp/qualityguard-clones")]
-    API -->|Outbound HTTPS (Optional)| ThirdParty["OpenAI / Anthropic / Gemini / Stripe / GitHub"]
+    Caddy -->|"/api/*, /webhooks/*, /health, /ready"| API["QualityGuard API (Fastify :8787)"]
+    Caddy -->|"/* (UI Pages)"| Web["QualityGuard Web (Next.js :3000)"]
+    API -->|"PostgreSQL Wire Protocol :5432"| PG[("PostgreSQL 16")]
+    API -->|"RESP :6379"| Redis[("Redis 7 Alpine")]
+    API -->|"Git Clone / Sandbox"| LocalFS[("Sandboxed Local Disk /tmp/qualityguard-clones")]
+    API -->|"Outbound HTTPS (Optional)"| ThirdParty["OpenAI / Anthropic / Gemini / Stripe / GitHub"]
 ```
 
 ---

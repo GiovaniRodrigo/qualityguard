@@ -65,8 +65,8 @@ flowchart TD
     GH -.->|TCP 80/443 Timeout| FW
     FW -.->|When Opened| Caddy
 
-    Caddy -->|"/", "/_next/*"| Web
-    Caddy -->|"/api/*", "/webhooks/*", "/health", "/ready"| API
+    Caddy -->|"/, /_next/*"| Web
+    Caddy -->|"/api/*, /webhooks/*, /health, /ready"| API
     
     API -->|PostgreSQL Protocol| PG
     API -->|Redis RESP Protocol| Redis
